@@ -289,3 +289,58 @@ body.light-mode .group-create-card input {
   border: 1px solid #ccc;
   color: #222;
 }
+
+/* BADGES FOR SUBMISSIONS */
+.lang-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(168, 85, 247, 0.2);
+  color: var(--accent1);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.score-badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.score-high {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: white;
+}
+
+.score-medium {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: white;
+}
+
+.score-low {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  color: white;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-passed {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.status-partial {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.status-failed {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+

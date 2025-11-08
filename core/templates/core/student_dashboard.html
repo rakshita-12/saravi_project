@@ -28,7 +28,7 @@
         <h3>👩‍🏫 Faculty In-Charge</h3>
         <p id="facultyName">
           {% if faculty %}
-            {{ faculty.user.username }}
+            {{ faculty.user.get_full_name|default:faculty.user.username }} ({{ faculty.department }})
           {% else %}
             Not assigned yet
           {% endif %}
@@ -36,8 +36,34 @@
       </div>
     </section>
 
+    <!-- QUESTIONS GRID -->
+    <section class="questions-section panel">
+      <h2 class="panel-title">📚 Available Challenges</h2>
+      <div class="questions-grid">
+        {% for question in questions %}
+          <div class="question-card" data-question-id="{{ question.id }}">
+            <div class="question-header">
+              <h3>{{ question.title }}</h3>
+              <span class="difficulty-badge difficulty-{{ question.difficulty|lower }}">
+                {{ question.difficulty }}
+              </span>
+            </div>
+            <p class="question-description">{{ question.description|truncatewords:30 }}</p>
+            <div class="question-footer">
+              <span class="marks">💎 {{ question.marks }} marks</span>
+              <button class="btn-solve" data-question-id="{{ question.id }}">
+                Solve Challenge →
+              </button>
+            </div>
+          </div>
+        {% empty %}
+          <p class="empty-state">No challenges available yet. Check back soon!</p>
+        {% endfor %}
+      </div>
+    </section>
+
     <!-- LANGUAGE SELECTION -->
-    <section id="languageSection" class="language-section panel">
+    <section id="languageSection" class="language-section panel hidden">
       <h2 class="panel-title">Choose a Programming Language</h2>
       <div id="languageGrid" class="language-grid">
         {% for lang, emoji in languages.items %}
@@ -63,22 +89,18 @@
         <aside class="col question-col">
           <h4>Challenge</h4>
           <div class="card question-card" id="challengeCard">
-            {% if questions %}
-              {% for question in questions %}
-                <h5 id="challengeTitle">{{ question.title }}</h5>
-                <p id="challengeDesc">{{ question.description }}</p>
-                <h6>Example</h6>
-                <pre class="example">{{ question.example }}</pre>
-                <h6>Constraints</h6>
-                <ul class="constraints">
-                  {% for constraint in question.constraints %}
-                    <li>{{ constraint }}</li>
-                  {% endfor %}
-                </ul>
-              {% endfor %}
-            {% else %}
-              <p>No challenges assigned yet.</p>
-            {% endif %}
+            <h5 id="challengeTitle">Select a challenge to view details</h5>
+            <p id="challengeDesc"></p>
+            <div id="questionDetails" style="display:none;">
+              <h6>Difficulty: <span id="questionDifficulty"></span></h6>
+              <h6>Marks: <span id="questionMarks"></span></h6>
+              <h6>Example Input</h6>
+              <pre class="example" id="exampleInput"></pre>
+              <h6>Example Output</h6>
+              <pre class="example" id="exampleOutput"></pre>
+              <h6>Constraints</h6>
+              <pre class="constraints" id="questionConstraints"></pre>
+            </div>
           </div>
         </aside>
 
@@ -106,33 +128,41 @@
 
         <!-- Submissions Table -->
         <section class="submissions panel">
-          <h3>Your Submissions</h3>
+          <h3>📊 Your Recent Submissions</h3>
           <table class="styled-table">
             <thead>
               <tr>
                 <th>Question</th>
                 <th>Language</th>
-                <th>Result</th>
+                <th>Score</th>
+                <th>Status</th>
                 <th>Submitted At</th>
               </tr>
             </thead>
             <tbody>
               {% for sub in submissions %}
                 <tr>
-                  <td>{{ sub.question.title }}</td>
-                  <td>{{ sub.language }}</td>
+                  <td><strong>{{ sub.question.title }}</strong></td>
+                  <td><span class="lang-badge">{{ sub.language }}</span></td>
                   <td>
-                    {% if sub.result %}
-                      {{ sub.result.status }}
+                    <span class="score-badge {% if sub.score >= 70 %}score-high{% elif sub.score >= 40 %}score-medium{% else %}score-low{% endif %}">
+                      {{ sub.score|floatformat:0 }}%
+                    </span>
+                  </td>
+                  <td>
+                    {% if sub.score == 100 %}
+                      <span class="status-badge status-passed">✓ Passed</span>
+                    {% elif sub.score >= 50 %}
+                      <span class="status-badge status-partial">~ Partial</span>
                     {% else %}
-                      Pending
+                      <span class="status-badge status-failed">✗ Failed</span>
                     {% endif %}
                   </td>
                   <td>{{ sub.submitted_at|date:"M d, Y H:i" }}</td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="4">No submissions yet.</td>
+                  <td colspan="5" class="empty-state">No submissions yet. Start solving challenges!</td>
                 </tr>
               {% endfor %}
             </tbody>

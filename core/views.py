@@ -116,7 +116,7 @@ def run_student_code(request):
         test_cases = [{"input": data.get("input"), "expected": data.get("expected")}]
 
         report = evaluate_submission(code, lang, test_cases)
-        return JsonResponse(report[0])  # send first test case result
+        return JsonResponse(report)
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
@@ -133,16 +133,20 @@ def submit_code(request, question_id):
         code = data.get("code")
         lang = data.get("language")
 
-        # Evaluate using AI evaluator
-        report = evaluate_submission(code, lang, question.test_cases)
+        test_cases_list = [
+            {"input": tc.input_data, "expected": tc.expected_output}
+            for tc in question.test_cases.all()
+        ]
 
-        # Save submission
+        report = evaluate_submission(code, lang, test_cases_list)
+
         Submission.objects.create(
             student=student,
             question=question,
             code=code,
             language=lang,
-            result=report
+            result=report,
+            score=report.get('score', 0)
         )
 
         return JsonResponse({

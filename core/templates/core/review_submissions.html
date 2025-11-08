@@ -40,25 +40,37 @@
             <tr>
               <th>Student Name</th>
               <th>Question</th>
-              <th>Status</th>
+              <th>Language</th>
               <th>Score</th>
-              <th>Action</th>
+              <th>Status</th>
+              <th>Submitted At</th>
             </tr>
           </thead>
           <tbody>
             {% for submission in submissions %}
               <tr>
-                <td>{{ submission.student.user.username }}</td>
+                <td><strong>{{ submission.student.user.get_full_name|default:submission.student.user.username }}</strong></td>
                 <td>{{ submission.question.title }}</td>
-                <td>{{ submission.result|default:"Pending" }}</td>
-                <td>{{ submission.score|default:"0" }}</td>
+                <td><span class="lang-badge">{{ submission.language }}</span></td>
                 <td>
-                  <button class="btn-view" disabled>View / Evaluate</button>
+                  <span class="score-badge {% if submission.score >= 70 %}score-high{% elif submission.score >= 40 %}score-medium{% else %}score-low{% endif %}">
+                    {{ submission.score|floatformat:0 }}%
+                  </span>
                 </td>
+                <td>
+                  {% if submission.score == 100 %}
+                    <span class="status-badge status-passed">✓ Passed</span>
+                  {% elif submission.score >= 50 %}
+                    <span class="status-badge status-partial">~ Partial</span>
+                  {% else %}
+                    <span class="status-badge status-failed">✗ Failed</span>
+                  {% endif %}
+                </td>
+                <td>{{ submission.submitted_at|date:"M d, Y H:i" }}</td>
               </tr>
             {% empty %}
               <tr>
-                <td colspan="5">No submissions yet.</td>
+                <td colspan="6" style="text-align: center; padding: 40px; color: #999; font-style: italic;">No submissions yet. Students haven't submitted any code.</td>
               </tr>
             {% endfor %}
           </tbody>
