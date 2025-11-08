@@ -121,6 +121,31 @@ def run_student_code(request):
 
 
 @login_required
+def get_question_details(request, question_id):
+    """Return question details as JSON for the code editor"""
+    try:
+        student = request.user.student
+        question = get_object_or_404(Question, id=question_id)
+        
+        # Get first test case as example
+        test_case = question.test_cases.first()
+        
+        data = {
+            "id": question.id,
+            "title": question.title,
+            "description": question.description,
+            "difficulty": question.difficulty,
+            "marks": question.marks,
+            "constraints": question.constraints or "No specific constraints",
+            "example_input": test_case.input_data if test_case else "",
+            "example_output": test_case.expected_output if test_case else ""
+        }
+        return JsonResponse(data)
+    except Student.DoesNotExist:
+        return JsonResponse({"error": "Student profile not found"}, status=400)
+
+
+@login_required
 def submit_code(request, question_id):
     if request.method == "POST":
         try:

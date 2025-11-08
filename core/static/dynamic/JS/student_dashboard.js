@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const exitFocusBtn = document.getElementById('exitFocusBtn');
   const focusWarning = document.getElementById('focusWarning');
   const themeToggle = document.getElementById('themeToggle');
+  
+  // Store current question ID
+  let currentQuestionId = null;
 
   // Theme persistence key
   const THEME_KEY = 'cq_theme';
@@ -53,11 +56,56 @@ document.addEventListener('DOMContentLoaded', () => {
     applyEditorColors();
   });
 
+  // "Solve Challenge" button handler
+  document.querySelectorAll('.btn-solve').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const questionId = btn.getAttribute('data-question-id');
+      currentQuestionId = questionId;
+      
+      try {
+        // Fetch question details
+        const response = await fetch(`/student/question/${questionId}/`);
+        const question = await response.json();
+        
+        if (question.error) {
+          alert(question.error);
+          return;
+        }
+        
+        // Hide questions grid, show language selection
+        document.querySelector('.questions-section').classList.add('hidden');
+        languageSection.classList.remove('hidden');
+        
+        // Store question data for later use
+        window.currentQuestion = question;
+        
+      } catch (error) {
+        console.error('Error fetching question:', error);
+        alert('Failed to load question details');
+      }
+    });
+  });
+
   // LANGUAGE selection -> show workspace
   languageGrid.addEventListener('click', (e) => {
     const btn = e.target.closest('.lang-card');
     if (!btn) return;
     const lang = btn.dataset.lang;
+    
+    // Load question details if available
+    if (window.currentQuestion) {
+      const q = window.currentQuestion;
+      document.getElementById('challengeTitle').textContent = q.title;
+      document.getElementById('challengeDesc').textContent = q.description;
+      document.getElementById('questionDifficulty').textContent = q.difficulty;
+      document.getElementById('questionMarks').textContent = q.marks;
+      document.getElementById('exampleInput').textContent = q.example_input;
+      document.getElementById('exampleOutput').textContent = q.example_output;
+      document.getElementById('questionConstraints').textContent = q.constraints;
+      document.getElementById('questionDetails').style.display = 'block';
+    }
+    
     // set UI
     languageSection.classList.add('hidden');
     workspace.classList.remove('hidden');
@@ -75,13 +123,77 @@ document.addEventListener('DOMContentLoaded', () => {
     // clear warning / focus if any
     if (document.body.classList.contains('focus-mode')) exitFocus();
   });
+  
+  // Add "Back to Questions" functionality
+  const backToQuestions = () => {
+    workspace.classList.add('hidden');
+    languageSection.classList.add('hidden');
+    document.querySelector('.questions-section').classList.remove('hidden');
+    currentQuestionId = null;
+    window.currentQuestion = null;
+  };
 
   // Mock run & submit
   runBtn.addEventListener('click', () => {
     runCodeMock();
   });
-  submitBtn.addEventListener('click', () => {
-    submitMock();
+  submitBtn.addEventListener('click', async () => {
+    if (!currentQuestionId) {
+      showToast('Please select a question first', 2000);
+      return;
+    }
+    
+    const code = codeEditor.value;
+    const language = langSelect.value;
+    
+    if (!code.trim()) {
+      showToast('Please write some code first', 2000);
+      return;
+    }
+    
+    try {
+      showToast('Submitting for evaluation...', 1500);
+      
+      const response = await fetch(`/student/submit/${currentQuestionId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+          code: code,
+          language: language
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        showToast('Submission failed: ' + data.error, 3000);
+        return;
+      }
+      
+      // Extract the actual result (nested under 'result' key)
+      const result = data.result;
+      
+      // Display results
+      scoreEl.textContent = `${result.score}%`;
+      const passedTests = result.results.filter(r => r.is_correct).length;
+      testsEl.textContent = `${passedTests}/${result.results.length}`;
+      logicEl.textContent = result.score >= 70 ? 'Passed' : result.score >= 40 ? 'Partial' : 'Failed';
+      
+      // Show first test feedback
+      if (result.results.length > 0) {
+        const firstTest = result.results[0];
+        aiFeedback.textContent = `Test 1: ${firstTest.is_correct ? '✓ Passed' : '✗ Failed'}\n${firstTest.ai_feedback}`;
+      }
+      
+      showToast(`Submission complete! Score: ${result.score}%`, 3000);
+      
+    } catch (error) {
+      console.error('Submission error:', error);
+      showToast('Failed to submit code. Please try again.', 3000);
+    }
   });
   saveBtn.addEventListener('click', () => {
     localStorage.setItem('cq_draft', codeEditor.value);
