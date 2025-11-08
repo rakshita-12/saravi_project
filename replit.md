@@ -49,6 +49,11 @@ CodeQuestAI is a Django-based web application that provides an AI-powered coding
 - Added deployment configuration with Gunicorn
 - Created fresh database migrations
 - Added .gitignore for Python/Django
+- Populated database with sample data (faculty, students, questions, test cases, announcements)
+- Fixed submission code to properly handle test cases and save scores (November 8, 2025)
+- Redesigned student dashboard with card-based question grid featuring difficulty badges
+- Added score/status badges for submissions in both student and faculty dashboards
+- Enhanced UI with gradient badges for Easy/Medium/Hard difficulties and Pass/Partial/Fail statuses
 
 ## Notes
 - The AI evaluator requires Ollama connection (currently unavailable message appears)
