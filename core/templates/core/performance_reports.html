@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performance Reports | Faculty Dashboard</title>
+
+  <!-- Corrected static CSS path -->
+  <link rel="stylesheet" href="{% static 'dynamic/CSS/faculty_dashboard.css' %}" />
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2 class="menu-title">Menu</h2>
+      <ul>
+        <li><a href="{% url 'faculty_dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'upload_questions' %}">Upload Questions</a></li>
+        <li><a href="{% url 'review_submissions' %}">Review Submissions</a></li>
+        <li><a href="{% url 'performance_reports' %}" class="active">Performance Reports</a></li>
+        <li><a href="{% url 'announcements' %}">Announcements</a></li>
+        <li><a href="{% url 'logout' %}">Logout</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+      <header class="topbar">
+        <h1>Performance Reports</h1>
+        <div class="theme-toggle">
+          <button id="themeToggle">🌙</button>
+        </div>
+      </header>
+
+      <section class="overview">
+        <h3>Student Performance Overview</h3>
+        <p>View reports of overall student performance.</p>
+
+        <table class="performance-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Question</th>
+              <th>Score</th>
+              <th>Result</th>
+              <th>Submitted At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for submission in submissions %}
+              <tr>
+                <td>{{ submission.student.user.username }}</td>
+                <td>{{ submission.question.title }}</td>
+                <td>{{ submission.score }}</td>
+                <td>{{ submission.result }}</td>
+                <td>{{ submission.submitted_at|date:"M d, Y H:i" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5">No submissions yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <!-- Corrected JS path -->
+  <script src="{% static 'dynamic/JS/faculty_dashboard.js' %}"></script>
+</body>
+</html>

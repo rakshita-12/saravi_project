@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CodeQuest AI — Learn. Code. Analyse.</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{% static 'dynamic/CSS/landing.css' %}" />
+</head>
+<body>
+  <!-- Animated background canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-inner">
+      <div class="logo">Code<span>QuestAI</span></div>
+
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How It Works</a>
+      </nav>
+
+      <!-- Theme toggle -->
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <!-- MAIN WRAPPER -->
+  <div class="page-wrapper">
+    <!-- HERO -->
+    <section class="hero" role="banner">
+      <div class="hero-content">
+        <h1>Level Up Your <span class="accent">Coding Skills</span></h1>
+        <p class="lead">
+          Learn, practice and get AI-powered feedback — logic-aware evaluations, partial grading, XP & badges.
+        </p>
+
+        <div class="cta">
+          <a class="btn" href="{% url 'student_login' %}">Student Login</a>
+          <a class="btn outline" href="{% url 'faculty_login' %}">Faculty Login</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="features" role="region" aria-labelledby="features-heading">
+      <div class="container">
+        <h2 id="features-heading">Features</h2>
+        <p class="muted">
+          Small, powerful tools that help you practice, improve, and measure your coding craft.
+        </p>
+
+        <div class="features-grid">
+          <div class="feature">
+            <div class="icon">🧠</div>
+            <h3>AI Code Review</h3>
+            <p>Logic-aware analysis, suggestions and next-step hints.</p>
+          </div>
+
+          <div class="feature">
+            <div class="icon">🎯</div>
+            <h3>Focus Mode</h3>
+            <p>Distraction-free editor for deep work and fast progress.</p>
+          </div>
+
+          <div class="feature">
+            <div class="icon">⚙️</div>
+            <h3>Partial Grading</h3>
+            <p>Get credit for correct steps even if output is incomplete.</p>
+          </div>
+
+          <div class="feature">
+            <div class="icon">🏅</div>
+            <h3>XP & Badges</h3>
+            <p>Track progress and unlock achievements as you learn.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how" class="how" role="region" aria-labelledby="how-heading">
+      <div class="container">
+        <h2 id="how-heading">How It Works</h2>
+        <p class="muted">A simple step-by-step flow to practice and improve.</p>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <h4>Choose Role</h4>
+            <p>Login as student or faculty and access tailored tools.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <h4>Write & Run</h4>
+            <p>Use the in-browser editor to code and run quick checks.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <h4>AI Evaluation</h4>
+            <p>Receive score breakdowns, hints and error analysis.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">4</div>
+            <h4>Learn & Earn</h4>
+            <p>Gain XP, badges and track improvement over time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="container">
+        © 2025 CodeQuest AI — Built for the next generation of coders
+      </div>
+    </footer>
+  </div>
+
+  <!-- JS -->
+  <script src="{% static 'dynamic/JS/theme.js' %}" defer></script>
+  <script src="{% static 'dynamic/JS/landing.js' %}" defer></script>
+
+  <!-- Smooth Scroll for navigation -->
+  <script>
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
+</body>
+</html>

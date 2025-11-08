@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Questions | Faculty Dashboard</title>
+  <link rel="stylesheet" href="{% static 'dynamic/CSS/faculty_dashboard.css' %}" />
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2 class="menu-title">Menu</h2>
+      <ul>
+        <li><a href="{% url 'faculty_dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'upload_questions' %}" class="active">Upload Questions</a></li>
+        <li><a href="{% url 'review_submissions' %}">Review Submissions</a></li>
+        <li><a href="{% url 'performance_reports' %}">Performance Reports</a></li>
+        <li><a href="{% url 'announcements' %}">Announcements</a></li>
+        <li><a href="{% url 'logout' %}">Logout</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+      <header class="topbar">
+        <h1>Upload Questions</h1>
+        <div class="theme-toggle">
+          <button id="themeToggle">🌙</button>
+        </div>
+      </header>
+
+      <section class="overview">
+        <h3>Upload New Question</h3>
+
+        <form method="POST" action="{% url 'upload_questions' %}" class="upload-form">
+          {% csrf_token %}
+          <label>Question Title:</label>
+          <input type="text" name="title" placeholder="Enter question title" required />
+
+          <label>Description:</label>
+          <textarea name="description" placeholder="Write question details" required></textarea>
+
+          <label>Difficulty:</label>
+          <select name="difficulty" required>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+
+          <button type="submit">Upload</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="{% static 'dynamic/JS/faculty_dashboard.js' %}"></script>
+</body>
+</html>

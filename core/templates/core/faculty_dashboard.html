@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Faculty Dashboard | CodeQuest AI</title>
+  <link rel="stylesheet" href="{% static 'dynamic/CSS/faculty_dashboard.css' %}" />
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2 class="menu-title">Menu</h2>
+      <ul>
+        <li><a href="{% url 'faculty_dashboard' %}" class="active">Dashboard</a></li>
+        <li><a href="{% url 'upload_question' %}">Upload Questions</a></li>
+        <li><a href="{% url 'review_submissions' %}">Review Submissions</a></li>
+        <li><a href="{% url 'performance_reports' %}">Performance Reports</a></li>
+        <li><a href="{% url 'faculty_announcements' %}">Announcements</a></li>
+        <li><a href="{% url 'logout' %}">Logout</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+      <header class="topbar">
+        <h1>Faculty Dashboard</h1>
+        <div class="theme-toggle">
+          <button id="themeToggle">🌙</button>
+        </div>
+      </header>
+
+      <section class="overview">
+        <h3>Welcome, {{ faculty.user.username }}!</h3>
+        <p>Department: {{ faculty.department }}</p>
+
+        <h4>Your Questions</h4>
+        <ul>
+          {% for question in questions %}
+            <li>{{ question.title }} ({{ question.created_at|date:"M d, Y" }})</li>
+          {% empty %}
+            <li>No questions uploaded yet.</li>
+          {% endfor %}
+        </ul>
+
+        <h4>Your Announcements</h4>
+        <ul>
+          {% for announcement in announcements %}
+            <li>
+              <strong>{{ announcement.title }}</strong> - {{ announcement.created_at|date:"M d, Y" }}
+              <p>{{ announcement.description }}</p>
+            </li>
+          {% empty %}
+            <li>No announcements posted yet.</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <!-- Group Management Section (UI only for now) -->
+      <section class="overview">
+        <h3>Manage Groups & Student Progress</h3>
+        <div class="group-create-card">
+          <input type="text" id="groupNameInput" placeholder="Enter new group name..." />
+          <button id="createGroupBtn">+ Create Group</button>
+        </div>
+        <div id="groupList" class="group-list">
+          <p class="empty-state">No groups yet. Create one above.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="{% static 'dynamic/JS/faculty_dashboard.js' %}"></script>
+</body>
+</html>

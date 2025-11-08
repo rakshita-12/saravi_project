@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Announcements | Faculty Dashboard</title>
+  <link rel="stylesheet" href="{% static 'dynamic/CSS/faculty_dashboard.css' %}" />
+  <script src="{% static 'dynamic/JS/faculty_dashboard.js' %}"></script>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <h2 class="menu-title">Menu</h2>
+      <ul>
+        <li><a href="{% url 'faculty_dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'upload_questions' %}">Upload Questions</a></li>
+        <li><a href="{% url 'review_submissions' %}">Review Submissions</a></li>
+        <li><a href="{% url 'performance_reports' %}">Performance Reports</a></li>
+        <li><a href="{% url 'faculty_announcements' %}" class="active">Announcements</a></li>
+        <li><a href="{% url 'logout' %}">Logout</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <h1>Announcements</h1>
+        <div class="theme-toggle"><button id="themeToggle">🌙</button></div>
+      </header>
+
+      <section class="overview">
+        <h3>Create Announcement</h3>
+        <form method="POST" class="upload-form">
+          {% csrf_token %}
+          <label>Title:</label>
+          <input type="text" name="title" placeholder="Announcement title" required />
+
+          <label>Message:</label>
+          <textarea name="description" placeholder="Write announcement message..." required></textarea>
+
+          <button type="submit">Post Announcement</button>
+        </form>
+
+        <h3>All Announcements</h3>
+        <ul class="announcement-list">
+          {% for announcement in announcements %}
+            <li>
+              <strong>{{ announcement.title }}</strong> by {{ announcement.faculty.user.username }}<br>
+              <small>{{ announcement.created_at|date:"M d, Y H:i" }}</small>
+              <p>{{ announcement.description }}</p>
+            </li>
+          {% empty %}
+            <li>No announcements yet.</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

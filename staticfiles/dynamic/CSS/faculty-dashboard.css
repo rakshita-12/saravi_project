@@ -1,0 +1,291 @@
+/* ============ GLOBAL THEME VARIABLES ============ */
+:root {
+  --bg-dark: #0d0b1a;
+  --bg-light: #f4f4f8;
+  --text-dark: #f5f5f5;
+  --text-light: #222;
+  --accent1: #a855f7;
+  --accent2: #06b6d4;
+  --card-dark: #181529;
+  --card-light: #ffffff;
+  --shadow-glow: 0 0 20px rgba(168, 85, 247, 0.4);
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  margin: 0;
+  background-color: var(--bg-dark);
+  color: var(--text-dark);
+  transition: background 0.4s, color 0.4s;
+}
+
+/* ============ LAYOUT ============ */
+.dashboard {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 240px;
+  background: linear-gradient(180deg, #181529, #0d0b1a);
+  padding: 2rem 1rem;
+  box-shadow: var(--shadow-glow);
+}
+
+.sidebar .menu-title {
+  color: var(--accent1);
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  margin: 1rem 0;
+}
+
+.sidebar ul li a {
+  color: var(--text-dark);
+  text-decoration: none;
+  font-size: 1rem;
+  display: block;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  transition: background 0.3s;
+}
+
+.sidebar ul li a:hover,
+.sidebar ul li a.active {
+  background: var(--accent1);
+  color: #fff;
+}
+
+/* ============ MAIN CONTENT ============ */
+.main-content {
+  flex: 1;
+  background: var(--bg-dark);
+  color: var(--text-dark);
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+  transition: background 0.4s, color 0.4s;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.theme-toggle button {
+  background: var(--accent1);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.theme-toggle button:hover {
+  background: var(--accent2);
+}
+
+/* ============ CONTENT SECTIONS ============ */
+.overview h3 {
+  color: var(--accent2);
+  margin-top: 1.5rem;
+}
+
+.upload-form,
+.overview table {
+  background: var(--card-dark);
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: var(--shadow-glow);
+  margin-top: 1rem;
+}
+
+.upload-form input,
+.upload-form textarea,
+.upload-form select {
+  width: 100%;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  border: none;
+  padding: 0.7rem;
+  border-radius: 8px;
+}
+
+.upload-form button {
+  background: var(--accent1);
+  color: white;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.upload-form button:hover {
+  background: var(--accent2);
+}
+
+/* TABLE STYLING */
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.styled-table th,
+.styled-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  text-align: left;
+}
+
+.styled-table th {
+  color: var(--accent1);
+}
+
+/* ============ LIGHT MODE ============ */
+body.light-mode {
+  background-color: var(--bg-light);
+  color: var(--text-light);
+}
+
+body.light-mode .sidebar {
+  background: linear-gradient(180deg, #ffffff, #e9e9f5);
+}
+
+body.light-mode .sidebar ul li a {
+  color: var(--text-light);
+}
+
+body.light-mode .sidebar ul li a:hover,
+body.light-mode .sidebar ul li a.active {
+  background: var(--accent1);
+  color: white;
+}
+
+body.light-mode .upload-form,
+body.light-mode .overview table {
+  background: var(--card-light);
+  color: var(--text-light);
+}
+/* ============ GROUP MANAGEMENT SECTION ============ */
+.groups-section {
+  margin-top: 2rem;
+  background: var(--card-dark);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow-glow);
+  transition: 0.4s;
+}
+
+.groups-section h2 {
+  font-size: 1.4rem;
+  color: var(--accent1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.group-create-card {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.group-create-card input {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: var(--text-dark);
+  transition: 0.3s;
+}
+
+.group-create-card input:focus {
+  border-color: var(--accent2);
+  outline: none;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+}
+
+.group-create-card button {
+  background: var(--accent1);
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.group-create-card button:hover {
+  background: var(--accent2);
+}
+
+/* Group cards display */
+.group-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.group-card {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  border-radius: 10px;
+  transition: 0.3s;
+}
+
+.group-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-3px);
+}
+
+.group-card h4 {
+  color: var(--accent2);
+  margin-bottom: 0.5rem;
+}
+
+.group-card ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.group-card ul li {
+  padding: 4px 0;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  opacity: 0.9;
+}
+
+/* Empty state message */
+.empty-state {
+  color: #aaa;
+  font-style: italic;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* LIGHT MODE support */
+body.light-mode .groups-section {
+  background: var(--card-light);
+  color: var(--text-light);
+}
+
+body.light-mode .group-card {
+  background: #f6f6fb;
+}
+
+body.light-mode .group-create-card input {
+  border: 1px solid #ccc;
+  color: #222;
+}

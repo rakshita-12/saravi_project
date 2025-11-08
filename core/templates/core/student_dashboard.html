@@ -1,0 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Dashboard | CodeQuest AI</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{% static 'dynamic/CSS/student-dashboard.css' %}" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <!-- THEME TOGGLE -->
+  <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="brand">CodeQuest <span>AI</span></div>
+    <div class="header-right"></div>
+  </header>
+
+  <main class="container">
+    <!-- FACULTY INFO SECTION -->
+    <section class="faculty-section panel">
+      <div class="faculty-card">
+        <h3>👩‍🏫 Faculty In-Charge</h3>
+        <p id="facultyName">
+          {% if faculty %}
+            {{ faculty.user.username }}
+          {% else %}
+            Not assigned yet
+          {% endif %}
+        </p>
+      </div>
+    </section>
+
+    <!-- LANGUAGE SELECTION -->
+    <section id="languageSection" class="language-section panel">
+      <h2 class="panel-title">Choose a Programming Language</h2>
+      <div id="languageGrid" class="language-grid">
+        {% for lang, emoji in languages.items %}
+          <button class="lang-card" data-lang="{{ lang }}">
+            {{ emoji }} {{ lang }}
+          </button>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- WORKSPACE -->
+    <section id="workspace" class="workspace panel hidden" aria-hidden="true">
+      <div class="workspace-header">
+        <button id="backToLang" class="ghost">← Back</button>
+        <h3 id="workspaceTitle">Language: —</h3>
+        <div class="workspace-controls">
+          <button id="enterFocus" class="focus-btn">🎯 Enter Focus Mode</button>
+        </div>
+      </div>
+
+      <div class="workspace-body">
+        <!-- Question Column -->
+        <aside class="col question-col">
+          <h4>Challenge</h4>
+          <div class="card question-card" id="challengeCard">
+            {% if questions %}
+              {% for question in questions %}
+                <h5 id="challengeTitle">{{ question.title }}</h5>
+                <p id="challengeDesc">{{ question.description }}</p>
+                <h6>Example</h6>
+                <pre class="example">{{ question.example }}</pre>
+                <h6>Constraints</h6>
+                <ul class="constraints">
+                  {% for constraint in question.constraints %}
+                    <li>{{ constraint }}</li>
+                  {% endfor %}
+                </ul>
+              {% endfor %}
+            {% else %}
+              <p>No challenges assigned yet.</p>
+            {% endif %}
+          </div>
+        </aside>
+
+        <!-- Editor Column -->
+        <section class="col editor-col">
+          <div class="editor-top">
+            <select id="langSelect" class="lang-select">
+              <option>Python</option>
+              <option>C++</option>
+              <option>Java</option>
+              <option>JavaScript</option>
+            </select>
+
+            <div class="editor-actions">
+              <button id="runBtn" class="btn action">▶ Run (Ctrl/Cmd+Enter)</button>
+              <button id="submitBtn" class="btn action alt">🧠 Submit</button>
+              <button id="saveBtn" class="btn">💾 Save</button>
+            </div>
+          </div>
+
+          <div class="editor-wrap">
+            <textarea id="codeEditor" class="code-editor" spellcheck="false">// Start coding here...</textarea>
+          </div>
+        </section>
+
+        <!-- Submissions Table -->
+        <section class="submissions panel">
+          <h3>Your Submissions</h3>
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Question</th>
+                <th>Language</th>
+                <th>Result</th>
+                <th>Submitted At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sub in submissions %}
+                <tr>
+                  <td>{{ sub.question.title }}</td>
+                  <td>{{ sub.language }}</td>
+                  <td>
+                    {% if sub.result %}
+                      {{ sub.result.status }}
+                    {% else %}
+                      Pending
+                    {% endif %}
+                  </td>
+                  <td>{{ sub.submitted_at|date:"M d, Y H:i" }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4">No submissions yet.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+
+        <!-- AI Evaluation Column -->
+        <aside class="col eval-col">
+          <h4>AI Evaluation</h4>
+          <div class="card eval-card">
+            <p><strong>Score:</strong> <span id="score">—</span></p>
+            <p><strong>Tests:</strong> <span id="tests">—</span></p>
+            <p><strong>Logic:</strong> <span id="logic">—</span></p>
+            <div id="aiFeedback" class="ai-feedback">Run or Submit to get AI feedback.</div>
+            <div class="badges" id="badgeList"></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- Focus Mode Exit -->
+  <button id="exitFocusBtn" class="exit-focus hidden" aria-label="Exit Focus Mode">✖ Exit Focus Mode</button>
+
+  <!-- Focus Warning -->
+  <div id="focusWarning" class="focus-warning hidden">
+    You left Focus Mode (switching tabs is disabled). Return immediately to continue.
+  </div>
+
+  <!-- JS -->
+  <script src="{% static 'dynamic/JS/student-dashboard.js' %}" defer></script>
+</body>
+</html>
