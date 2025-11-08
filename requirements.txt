@@ -4,3 +4,4 @@ gunicorn
 Django==5.2.8
 gunicorn
 requests
+huggingface_hub
