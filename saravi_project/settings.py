@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-h$xzjf91=-rnzgt6m3=@crn+0)x6*v7xo1*7t0iasctf9@$k&y
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -49,6 +49,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CSRF_TRUSTED_ORIGINS = ['https://*.replit.dev', 'https://*.repl.co']
+X_FRAME_OPTIONS = 'ALLOWALL'
 
 ROOT_URLCONF = 'saravi_project.urls'
 
