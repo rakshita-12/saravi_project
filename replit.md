@@ -59,6 +59,13 @@ CodeQuestAI is a Django-based web application that provides an AI-powered coding
   - Created interactive flow: Question Card → Language Selection → Code Editor
   - Integrated real-time code submission and evaluation
   - Display live results with scores, test outcomes, and AI feedback
+- Fixed AI evaluation and code submission issues (November 8, 2025):
+  - AI evaluation now works with graceful degradation (shows warning when Ollama unavailable, but logic checking still works)
+  - Fixed code submission by removing duplicate event listeners and correcting URL paths
+  - Updated run_student_code view to return proper JSON format
+  - Added safe element existence checks to prevent TypeErrors
+  - Implemented code editor clearing on logout and when leaving the page
+  - Fixed JavaScript scoping issues by moving handlers inside DOMContentLoaded block
 
 ## Notes
 - The AI evaluator requires Ollama connection (currently unavailable message appears)
