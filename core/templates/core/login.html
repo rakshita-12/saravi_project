@@ -1,0 +1,34 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | CodeQuestAI</title>
+  <link rel="stylesheet" href="{% static 'dynamic/CSS/landing.css' %}">
+</head>
+<body>
+  <div class="landing-container">
+    <header class="landing-header">
+      <h1>Code<span>Quest</span>AI</h1>
+      <button id="theme-toggle" class="theme-toggle">🌙</button>
+    </header>
+
+    <section class="hero">
+      <h2>Please Select Login Type</h2>
+      <p>Choose your role to continue</p>
+      
+      <div class="cta-buttons">
+        <a href="{% url 'student_login' %}" class="btn btn-primary">Student Login</a>
+        <a href="{% url 'faculty_login' %}" class="btn btn-secondary">Faculty Login</a>
+      </div>
+      
+      <div class="back-link" style="margin-top: 2rem;">
+        <a href="{% url 'home' %}" style="color: #00d4ff; text-decoration: none;">← Back to Home</a>
+      </div>
+    </section>
+  </div>
+
+  <script src="{% static 'dynamic/JS/theme.js' %}"></script>
+</body>
+</html>

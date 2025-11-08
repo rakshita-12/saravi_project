@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Review Submissions | Faculty Dashboard</title>
-  <link rel="stylesheet" href="{% static 'dynamic/CSS/faculty-dashboard.css' %}" />
+  <link rel="stylesheet" href="{% static 'dynamic/CSS/faculty_dashboard.css' %}" />
 </head>
 <body>
   <div class="dashboard">
@@ -14,10 +14,10 @@
       <h2 class="menu-title">Menu</h2>
       <ul>
         <li><a href="{% url 'faculty_dashboard' %}">Dashboard</a></li>
-        <li><a href="{% url 'upload_questions' %}">Upload Questions</a></li>
+        <li><a href="{% url 'upload_question' %}">Upload Questions</a></li>
         <li><a href="{% url 'review_submissions' %}" class="active">Review Submissions</a></li>
         <li><a href="{% url 'performance_reports' %}">Performance Reports</a></li>
-        <li><a href="{% url 'announcements' %}">Announcements</a></li>
+        <li><a href="{% url 'faculty_announcements' %}">Announcements</a></li>
         <li><a href="{% url 'logout' %}">Logout</a></li>
       </ul>
     </aside>
@@ -53,7 +53,7 @@
                 <td>{{ submission.result|default:"Pending" }}</td>
                 <td>{{ submission.score|default:"0" }}</td>
                 <td>
-                  <a href="{% url 'review_submission_detail' submission.id %}" class="btn-view">View / Evaluate</a>
+                  <button class="btn-view" disabled>View / Evaluate</button>
                 </td>
               </tr>
             {% empty %}
@@ -67,6 +67,6 @@
     </main>
   </div>
 
-  <script src="{% static 'dynamic/JS/faculty-dashboard.js' %}"></script>
+  <script src="{% static 'dynamic/JS/faculty_dashboard.js' %}"></script>
 </body>
 </html>

@@ -14,10 +14,10 @@
       <h2 class="menu-title">Menu</h2>
       <ul>
         <li><a href="{% url 'faculty_dashboard' %}">Dashboard</a></li>
-        <li><a href="{% url 'upload_questions' %}" class="active">Upload Questions</a></li>
+        <li><a href="{% url 'upload_question' %}" class="active">Upload Questions</a></li>
         <li><a href="{% url 'review_submissions' %}">Review Submissions</a></li>
         <li><a href="{% url 'performance_reports' %}">Performance Reports</a></li>
-        <li><a href="{% url 'announcements' %}">Announcements</a></li>
+        <li><a href="{% url 'faculty_announcements' %}">Announcements</a></li>
         <li><a href="{% url 'logout' %}">Logout</a></li>
       </ul>
     </aside>
@@ -34,7 +34,7 @@
       <section class="overview">
         <h3>Upload New Question</h3>
 
-        <form method="POST" action="{% url 'upload_questions' %}" class="upload-form">
+        <form method="POST" action="{% url 'upload_question' %}" class="upload-form">
           {% csrf_token %}
           <label>Question Title:</label>
           <input type="text" name="title" placeholder="Enter question title" required />
