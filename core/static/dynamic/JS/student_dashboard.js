@@ -122,6 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
     languageSection.classList.remove('hidden');
     // clear warning / focus if any
     if (document.body.classList.contains('focus-mode')) exitFocus();
+    // Clear code editor when going back
+    codeEditor.value = '// Start coding here...';
+    localStorage.removeItem('cq_draft');
   });
   
   // Add "Back to Questions" functionality
@@ -133,10 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.currentQuestion = null;
   };
 
-  // Mock run & submit
-  runBtn.addEventListener('click', () => {
-    runCodeMock();
-  });
+  // Run code (real implementation below at line 365)
   submitBtn.addEventListener('click', async () => {
     if (!currentQuestionId) {
       showToast('Please select a question first', 2000);
@@ -224,27 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
     el.style.zIndex = 9999;
     document.body.appendChild(el);
     setTimeout(()=> el.remove(), t);
-  }
-
-  // MOCK evaluation helpers
-  function runCodeMock(){
-    showToast('Running...', 900);
-    setTimeout(()=> {
-      aiFeedback.textContent = 'Output: (mock) Program executed.';
-    }, 700);
-  }
-  function submitMock(){
-    showToast('Submitting for AI evaluation...', 900);
-    setTimeout(()=> {
-      const txt = codeEditor.value || '';
-      const hasReturn = /return\s+|print\(|console\.log|std::/.test(txt);
-      const score = hasReturn ? Math.floor(7 + Math.random()*3) : Math.floor(3 + Math.random()*3);
-      scoreEl.textContent = `${score}/10`;
-      testsEl.textContent = hasReturn ? '4/5' : '2/5';
-      logicEl.textContent = hasReturn ? '4/5' : '2/5';
-      aiFeedback.textContent = hasReturn ? 'AI: Good core logic. Check edge cases.' : 'AI: Partial — missing final step.';
-      applyRewards(score);
-    }, 900);
   }
   // ----------------- FOCUS MODE + Exam protections -----------------
   let focusActive = false;
@@ -348,10 +327,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Prevent common devtools shortcuts outside focus too? only active in focus
   // Already handled in disableExamKeys
 
-  // Save/load draft
+  // Save/load draft - DO NOT load on page load
   const draftKey = 'cq_draft';
-  const savedDraft = localStorage.getItem(draftKey);
-  if (savedDraft) codeEditor.value = savedDraft;
+  // Clear draft when page loads (fresh start each session)
+  localStorage.removeItem(draftKey);
 
   // Basic autosave every 8s (not blocking)
   setInterval(()=> { localStorage.setItem(draftKey, codeEditor.value); }, 8000);
@@ -359,16 +338,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial small UI polish
   applyEditorColors();
 
-  // Done
-  console.log('Student dashboard loaded');
-});
-document.getElementById("runBtn").addEventListener("click", async () => {
+  // Run button handler
+  runBtn.addEventListener("click", async () => {
   const code = document.getElementById("codeEditor").value;
   const language = document.getElementById("langSelect").value;
 
-  // Optional: Get the example input/output from the current question
-  const input = document.querySelector(".example").innerText.split("→")[0].replace("Input:", "").trim();
-  const expected = document.querySelector(".example").innerText.split("→")[1].replace("Output:", "").trim();
+  // Get example input/output if available, otherwise use empty strings
+  let input = "";
+  let expected = "";
+  
+  const exampleInputEl = document.getElementById("exampleInput");
+  const exampleOutputEl = document.getElementById("exampleOutput");
+  
+  if (exampleInputEl && exampleInputEl.textContent) {
+    input = exampleInputEl.textContent.trim();
+  }
+  if (exampleOutputEl && exampleOutputEl.textContent) {
+    expected = exampleOutputEl.textContent.trim();
+  }
 
   const formData = new FormData();
   formData.append("code", code);
@@ -376,30 +363,48 @@ document.getElementById("runBtn").addEventListener("click", async () => {
   formData.append("input", input);
   formData.append("expected", expected);
 
-  const response = await fetch("/run_code/", {
-    method: "POST",
-    body: formData,
-    headers: { "X-CSRFToken": getCookie("csrftoken") } // CSRF token for Django
+  try {
+    showToast('Running code...', 1500);
+    const response = await fetch("/student/run_code/", {
+      method: "POST",
+      body: formData,
+      headers: { "X-CSRFToken": getCookie("csrftoken") }
+    });
+
+    const result = await response.json();
+    
+    if (result.error) {
+      showToast('Error: ' + result.error, 3000);
+      return;
+    }
+    
+    document.getElementById("score").innerText = result.score + '%';
+    document.getElementById("logic").innerText = result.is_correct ? "✅ Correct" : "❌ Wrong";
+    document.getElementById("aiFeedback").innerText = result.ai_feedback || 'No feedback available';
+    
+    showToast('Code executed!', 2000);
+  } catch (error) {
+    console.error('Run error:', error);
+    showToast('Failed to run code. Please try again.', 3000);
+  }
   });
 
-  const result = await response.json();
-  document.getElementById("score").innerText = result.is_correct ? "✅ Correct" : "❌ Wrong";
-  document.getElementById("logic").innerText = result.is_correct ? "Logic OK" : "Check Logic";
-  document.getElementById("aiFeedback").innerText = result.ai_feedback;
-});
+  // Helper function to read CSRF cookie
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let cookie of cookies) {
+              cookie = cookie.trim();
+              if (cookie.startsWith(name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
 
-// Helper function to read CSRF cookie
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let cookie of cookies) {
-            cookie = cookie.trim();
-            if (cookie.startsWith(name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
+  // Done
+  console.log('Student dashboard loaded');
+});

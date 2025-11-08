@@ -113,10 +113,23 @@ def run_student_code(request):
         data = request.POST
         code = data.get("code")
         lang = data.get("language")
-        test_cases = [{"input": data.get("input"), "expected": data.get("expected")}]
+        test_input = data.get("input", "")
+        expected_output = data.get("expected", "")
+        
+        test_cases = [{"input": test_input, "expected": expected_output}]
 
         report = evaluate_submission(code, lang, test_cases)
-        return JsonResponse(report)
+        
+        # Format response for the run button
+        result = report.get('results', [{}])[0] if report.get('results') else {}
+        
+        return JsonResponse({
+            "score": report.get('score', 0),
+            "is_correct": result.get('is_correct', False),
+            "output": result.get('output', ''),
+            "error": result.get('error', ''),
+            "ai_feedback": result.get('ai_feedback', 'No AI feedback available')
+        })
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
