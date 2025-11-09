@@ -86,42 +86,61 @@ CodeQuestAI is a Django-based web application that provides an AI-powered coding
   - Updated Performance Reports page with similar improvements
   - Filtered out AI error messages from faculty views (only shows meaningful feedback)
   - Color-coded test results (green for pass, red for fail) with proper styling
+- **Local Heuristic Fallback System** (November 9, 2025):
+  - Implemented code structure analyzer that works WITHOUT AI API
+  - Analyzes code BEFORE running tests to detect algorithmic approach
+  - Awards logic score (0-10) based on structural patterns: loops, conditionals, I/O, data structures
+  - Enables partial credit even for syntax errors that prevent code execution
+  - Verified: Code with syntax error receives 45% score (0% tests + 9/10 logic)
+  - System automatically switches between AI and local heuristic based on API availability
 
 ## AI Evaluation System
-The platform uses **Hugging Face Inference API** with **Llama 3.1-8B-Instruct** for intelligent code analysis:
+The platform uses **dual-track evaluation** with both AI and local heuristic analysis:
 
-### Features
-- **Test Case Evaluation**: Traditional output matching (score based on % of passing tests)
-- **Logic Score**: AI-assigned score (0-10) evaluating algorithm correctness and quality
-- **Hard-coded Detection**: AI identifies solutions that only work for specific test inputs
-- **Efficiency Analysis**: Evaluates time/space complexity and suggests improvements
-- **Code Quality**: Checks readability, best practices, and code structure
+### Evaluation Methods
+1. **AI Analysis** (Hugging Face Llama 3.1-8B-Instruct) - When API key available:
+   - Evaluates algorithmic approach and code quality
+   - Detects hard-coded solutions and inefficient algorithms
+   - Provides detailed feedback on improvements
+   
+2. **Local Heuristic Fallback** (No API key needed):
+   - Analyzes code structure (loops, conditionals, I/O, data structures)
+   - Awards logic score (0-10) based on structural patterns
+   - **Works even with syntax errors** - evaluates code before running tests
+   - Ensures partial credit WITHOUT requiring external API
 
-### Configuration
-- **Model**: meta-llama/Llama-3.1-8B-Instruct
-- **API Key**: Set via `HUGGINGFACE_API_KEY` environment variable (Replit Secrets)
-- **Timeout**: 30 seconds per evaluation
-- **Graceful Degradation**: Falls back to test-only evaluation if AI unavailable
-
-### Partial Credit Scoring System (NEW)
+### Partial Credit Scoring System
 The platform awards partial marks based on both test results AND logic correctness:
 
 **Scoring Formula:**
 - **Combined Score** = 50% Test Cases + 50% Logic Score
   - Test Case Score: 0-100% (percentage of passing tests)
-  - Logic Score: 0-10 from AI (converted to 0-100%)
-- **Fallback**: If AI unavailable, uses 100% test case score
+  - Logic Score: 0-10 (from AI or local heuristic, converted to 0-100%)
+
+**Local Heuristic Scoring (when AI unavailable):**
+- Base attempt: +2 points
+- Has loops: +2 points
+- Has conditionals: +2 points
+- Adequate length (3+ lines): +2 points
+- Handles I/O: +1 point
+- Uses data structures: +1 point
+- **Maximum: 10/10 points**
 
 **Examples:**
 - Perfect code: 100% tests + 10/10 logic = **100% final**
+- Syntax error, good approach: 0% tests + 9/10 logic = **45% final** ✓ Partial credit!
 - Good logic, some bugs: 40% tests + 8/10 logic = **60% final** ✓ Partial credit!
 - All tests pass, poor logic: 100% tests + 4/10 logic = **70% final**
 - Wrong approach: 0% tests + 3/10 logic = **15% final**
 
-This ensures students get credit for:
-- Correct algorithms with minor bugs
-- Right approach but implementation errors
-- Demonstrating understanding even when incomplete
+**Key Achievement:**
+Students get credit for correct algorithmic approach even when code has syntax errors or bugs!
+
+### Configuration
+- **AI Model** (optional): meta-llama/Llama-3.1-8B-Instruct
+- **API Key** (optional): Set via `HUGGINGFACE_API_KEY` in Replit Secrets
+- **Timeout**: 30 seconds for AI analysis
+- **Fallback**: Automatic switch to local heuristic if AI unavailable
 
 ### Evaluation Output
 Each submission returns:
