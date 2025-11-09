@@ -76,6 +76,16 @@ CodeQuestAI is a Django-based web application that provides an AI-powered coding
   - Added regex-based parsing for AI responses with float support and validation
   - AI now receives all test cases for better context when detecting hard-coded solutions
   - Evaluation results include: test_case_score, logic_score, hard_coded_detected flag, and detailed AI feedback
+  - Added `isAIErrorMessage()` filter to hide error messages from users
+  - Updated student dashboard to suppress AI service errors (410, timeout, model loading, etc.)
+- **Faculty Dashboard Enhancements** (November 9, 2025):
+  - Updated Review Submissions page with expandable test result details
+  - Added Logic Score column showing AI-assigned algorithm quality (0-10)
+  - Added hard-coded solution warning badges when AI detects suspicious patterns
+  - Implemented "View Details" button for each submission with clean test-by-test breakdown
+  - Updated Performance Reports page with similar improvements
+  - Filtered out AI error messages from faculty views (only shows meaningful feedback)
+  - Color-coded test results (green for pass, red for fail) with proper styling
 
 ## AI Evaluation System
 The platform uses **Hugging Face Inference API** with **Llama 3.1-8B-Instruct** for intelligent code analysis:

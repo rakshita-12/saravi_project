@@ -60,7 +60,7 @@
                   </span>
                 </td>
                 <td>
-                  {% if submission.result.logic_score %}
+                  {% if submission.result.logic_score is not None %}
                     <span class="logic-score">{{ submission.result.logic_score }}/10</span>
                   {% else %}
                     <span style="color: #999;">N/A</span>
