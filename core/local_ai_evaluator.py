@@ -1,8 +1,10 @@
-import subprocess, tempfile, os, json, requests
+import subprocess, tempfile, os, json, requests, re
 
 # ---------- Hugging Face API Configuration ----------
 HUGGINGFACE_API_KEY = os.environ.get("HUGGINGFACE_API_KEY")
-HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
+# Using Llama 3.1 (released July 2024) - improved performance over 3.0
+HUGGINGFACE_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
+HUGGINGFACE_API_URL = f"https://api-inference.huggingface.co/models/{HUGGINGFACE_MODEL}"
 
 if HUGGINGFACE_API_KEY:
     print("✓ Hugging Face AI enabled for intelligent code analysis")
@@ -82,7 +84,7 @@ def evaluate_logic(student_output, expected_output):
     return student_output.strip() == expected_output.strip()
 
 # ---------- AI Code Logic Analyzer Using Hugging Face ----------
-def analyze_code_logic(code, language, student_output, expected_output, test_input):
+def analyze_code_logic(code, language, student_output, expected_output, test_input, all_test_cases=None):
     """
     Intelligent code analysis that evaluates:
     - Algorithm correctness and logic
@@ -91,26 +93,48 @@ def analyze_code_logic(code, language, student_output, expected_output, test_inp
     - Best practices and code quality
     """
     if not HUGGINGFACE_API_KEY:
-        return "✓ Output-based evaluation complete. Enable AI for detailed logic analysis."
+        return {
+            "feedback": "✓ Output-based evaluation complete. Enable AI for detailed logic analysis.",
+            "logic_score": None,
+            "concerns": [],
+            "status": "no_api_key"
+        }
     
-    # Build comprehensive analysis prompt
-    prompt = f"""Analyze this {language} code submission for a coding problem:
+    # Build comprehensive analysis prompt with multiple test cases context
+    test_context = ""
+    if all_test_cases and len(all_test_cases) > 1:
+        test_context = f"\nALL TEST CASES (for context):\n"
+        for i, tc in enumerate(all_test_cases[:3], 1):  # Show up to 3 test cases
+            test_context += f"Test {i}: Input='{tc['input']}' → Expected='{tc['expected']}'\n"
+    
+    prompt = f"""You are a code evaluation expert. Analyze this {language} code submission.
 
 CODE:
+```{language}
 {code}
+```
 
-TEST CASE:
+CURRENT TEST CASE:
 Input: {test_input}
 Expected Output: {expected_output}
 Student Output: {student_output}
+{test_context}
 
-Evaluate the code on these criteria:
-1. **Algorithm Logic**: Is the approach correct? Does it solve the problem properly?
-2. **Hard-coding Detection**: Is the solution hard-coded or does it work for all valid inputs?
-3. **Code Efficiency**: What's the time/space complexity? Can it be improved?
-4. **Code Quality**: Is it readable, well-structured, and following best practices?
+EVALUATION CRITERIA:
+1. **Hard-coding Detection**: Does the code contain hard-coded values that match the expected output? Check for suspicious patterns like directly returning or printing the exact expected value.
+2. **Algorithm Logic**: Is the solution's logic sound and generalizable? Will it work for ANY valid input, not just these test cases?
+3. **Code Efficiency**: What's the time/space complexity? Is it optimal?
+4. **Code Quality**: Is it readable and follows best practices?
 
-Provide a concise analysis (2-3 sentences) focusing on logic correctness and any concerns."""
+RESPONSE FORMAT:
+- Start with "LOGIC_SCORE: X/10" where X is 0-10
+- Then provide 2-3 sentences explaining:
+  * If hard-coded: clearly state "HARD-CODED SOLUTION DETECTED"
+  * Algorithm correctness and whether it generalizes beyond test cases
+  * Any efficiency or quality concerns
+
+Example: "LOGIC_SCORE: 9/10. The solution correctly implements a linear search algorithm that will work for any input. Time complexity is O(n) which is optimal for this problem."
+"""
 
     try:
         headers = {
@@ -121,7 +145,7 @@ Provide a concise analysis (2-3 sentences) focusing on logic correctness and any
         payload = {
             "inputs": prompt,
             "parameters": {
-                "max_new_tokens": 200,
+                "max_new_tokens": 250,
                 "temperature": 0.3,
                 "top_p": 0.9,
                 "return_full_text": False
@@ -138,18 +162,92 @@ Provide a concise analysis (2-3 sentences) focusing on logic correctness and any
         if response.status_code == 200:
             result = response.json()
             if isinstance(result, list) and len(result) > 0:
-                feedback = result[0].get("generated_text", "").strip()
-                return feedback if feedback else "Code logic analysis unavailable."
-            return "Code logic analysis unavailable."
+                feedback_text = result[0].get("generated_text", "").strip()
+                
+                # Parse logic score from response using robust regex
+                logic_score = None
+                concerns = []
+                
+                if feedback_text:
+                    # Extract logic score with regex (handles int, float, variations)
+                    score_match = re.search(r'LOGIC[_\s]*SCORE[:\s]*([0-9]+(?:\.[0-9]+)?)\s*/\s*10', feedback_text, re.IGNORECASE)
+                    if score_match:
+                        try:
+                            score_value = float(score_match.group(1))
+                            # Clamp between 0-10 and round to 1 decimal
+                            logic_score = max(0, min(10, round(score_value, 1)))
+                        except (ValueError, IndexError):
+                            logic_score = None
+                    
+                    # Detect concerns with normalized lowercase matching
+                    feedback_lower = feedback_text.lower()
+                    
+                    # Hard-coded detection (multiple keywords)
+                    hard_coded_keywords = ['hard-coded', 'hardcoded', 'hard coded', 'directly return', 'directly print']
+                    if any(keyword in feedback_lower for keyword in hard_coded_keywords):
+                        concerns.append("hard_coded")
+                    
+                    # Efficiency concerns
+                    efficiency_keywords = ['inefficient', 'can be improved', 'optimize', 'better complexity']
+                    if any(keyword in feedback_lower for keyword in efficiency_keywords):
+                        concerns.append("efficiency")
+                    
+                    return {
+                        "feedback": feedback_text,
+                        "logic_score": logic_score,
+                        "concerns": concerns,
+                        "status": "success"
+                    }
+                    
+            return {
+                "feedback": "AI analysis returned empty response.",
+                "logic_score": None,
+                "concerns": [],
+                "status": "empty_response"
+            }
         elif response.status_code == 503:
-            return "AI model loading. Analysis will be available shortly."
+            return {
+                "feedback": "AI model loading. Try again in a moment.",
+                "logic_score": None,
+                "concerns": [],
+                "status": "model_loading"
+            }
+        elif response.status_code >= 400 and response.status_code < 500:
+            return {
+                "feedback": f"AI service error (client): {response.status_code}",
+                "logic_score": None,
+                "concerns": [],
+                "status": f"client_error_{response.status_code}"
+            }
         else:
-            return f"Logic evaluation complete (AI service busy)."
+            return {
+                "feedback": f"AI service unavailable (status {response.status_code})",
+                "logic_score": None,
+                "concerns": [],
+                "status": f"server_error_{response.status_code}"
+            }
             
     except requests.exceptions.Timeout:
-        return "Logic evaluation complete (AI timeout)."
+        return {
+            "feedback": "AI analysis timed out after 30 seconds.",
+            "logic_score": None,
+            "concerns": [],
+            "status": "timeout"
+        }
+    except requests.exceptions.RequestException as e:
+        return {
+            "feedback": f"Network error during AI analysis: {type(e).__name__}",
+            "logic_score": None,
+            "concerns": [],
+            "status": "network_error"
+        }
     except Exception as e:
-        return f"Logic evaluation complete."
+        return {
+            "feedback": f"Unexpected error during AI analysis: {type(e).__name__}",
+            "logic_score": None,
+            "concerns": [],
+            "status": "unexpected_error"
+        }
 
 # ---------- Evaluate a Submission ----------
 def evaluate_submission(code, language, test_cases):
@@ -157,6 +255,10 @@ def evaluate_submission(code, language, test_cases):
     total_tests = len(test_cases)
     passed_tests = 0
 
+    # Collect all logic scores and concerns
+    all_logic_scores = []
+    has_hard_coded = False
+    
     for case in test_cases:
         input_data = case["input"]
         expected_output = case["expected"]
@@ -171,13 +273,21 @@ def evaluate_submission(code, language, test_cases):
             passed_tests += 1
 
         # Intelligent AI Code Analysis (evaluates logic, not just output)
-        feedback = analyze_code_logic(
+        ai_analysis = analyze_code_logic(
             code=code,
             language=language,
             student_output=output,
             expected_output=expected_output,
-            test_input=input_data
+            test_input=input_data,
+            all_test_cases=test_cases
         )
+        
+        # Track logic scores and concerns (only if AI analysis succeeded)
+        if ai_analysis.get("status") == "success":
+            if ai_analysis.get("logic_score") is not None:
+                all_logic_scores.append(ai_analysis["logic_score"])
+            if "hard_coded" in ai_analysis.get("concerns", []):
+                has_hard_coded = True
 
         results.append({
             "input": input_data,
@@ -185,11 +295,26 @@ def evaluate_submission(code, language, test_cases):
             "output": output,
             "error": error,
             "is_correct": is_correct,
-            "ai_feedback": feedback
+            "ai_feedback": ai_analysis.get("feedback", ""),
+            "logic_score": ai_analysis.get("logic_score"),
+            "concerns": ai_analysis.get("concerns", []),
+            "status": ai_analysis.get("status", "unknown")
         })
 
-    score = round((passed_tests / total_tests) * 100, 2)
-    return {"score": score, "results": results}
+    # Calculate test case score
+    test_case_score = round((passed_tests / total_tests) * 100, 2)
+    
+    # Calculate average logic score from AI
+    avg_logic_score = None
+    if all_logic_scores:
+        avg_logic_score = round(sum(all_logic_scores) / len(all_logic_scores), 1)
+    
+    return {
+        "score": test_case_score,
+        "logic_score": avg_logic_score,
+        "hard_coded_detected": has_hard_coded,
+        "results": results
+    }
 
 # ---------- Example Execution ----------
 if __name__ == "__main__":
