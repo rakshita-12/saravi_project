@@ -19,31 +19,53 @@ OLLAMA_API_URL = get_ollama_url()
 
 # ---------- Run Code Function ----------
 def run_code(code, lang, test_input):
+    # Normalize language input (handle both "Python" and "python", "C++" and "cpp")
+    lang_normalized = lang.lower().replace("+", "p").replace(" ", "")
+    
+    # Validate that language is supported
+    supported_languages = ["python", "java", "cpp", "c", "c++"]
+    if lang_normalized not in supported_languages and lang_normalized.replace("+", "p") not in supported_languages:
+        return {
+            "output": "", 
+            "error": f"Unsupported language: {lang}. Supported languages are: Python, Java, C++, C"
+        }
+    
+    # Normalize c++ to cpp
+    if lang_normalized == "c++":
+        lang_normalized = "cpp"
+    
     with tempfile.TemporaryDirectory() as tempdir:
         ext_map = {"python": "py", "java": "java", "cpp": "cpp", "c": "c"}
-        ext = ext_map.get(lang.lower(), "txt")
+        ext = ext_map.get(lang_normalized, "txt")
         filepath = os.path.join(tempdir, f"code.{ext}")
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(code)
 
         compile_cmd = run_cmd = None
-        if lang.lower() == "python":
+        if lang_normalized == "python":
             run_cmd = ["python", filepath]
-        elif lang.lower() == "c":
+        elif lang_normalized == "c":
             exe_path = os.path.join(tempdir, "a.exe")
             compile_cmd = ["gcc", filepath, "-o", exe_path]
             run_cmd = [exe_path]
-        elif lang.lower() == "cpp":
+        elif lang_normalized == "cpp":
             exe_path = os.path.join(tempdir, "a.exe")
             compile_cmd = ["g++", filepath, "-o", exe_path]
             run_cmd = [exe_path]
-        elif lang.lower() == "java":
+        elif lang_normalized == "java":
             class_name = "Temp"
             filepath = os.path.join(tempdir, f"{class_name}.java")
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(code)
             compile_cmd = ["javac", filepath]
             run_cmd = ["java", "-cp", tempdir, class_name]
+        
+        # Additional safety check
+        if run_cmd is None:
+            return {
+                "output": "", 
+                "error": f"Internal error: Unable to configure runner for language {lang}"
+            }
 
         # Compile if needed
         if compile_cmd:
