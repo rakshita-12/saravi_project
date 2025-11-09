@@ -4,7 +4,6 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
-packages = ["ollama"]
 
 [workflows]
 runButton = "Project"
@@ -35,10 +34,13 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
+<<<<<<< HEAD
 localPort = 40307
 externalPort = 3001
 
 [[ports]]
+=======
+>>>>>>> 2f73f89f0370ba1e0f1d81e06c5bc8d6bde3ba8d
 localPort = 43763
 externalPort = 3000
 
