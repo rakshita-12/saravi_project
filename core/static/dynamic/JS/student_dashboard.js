@@ -176,14 +176,29 @@ document.addEventListener('DOMContentLoaded', () => {
       // Extract the actual result (nested under 'result' key)
       const result = data.result;
       
-      // Display results
+      // Display results with breakdown
       scoreEl.textContent = `${result.score}%`;
       const passedTests = result.results.filter(r => r.is_correct).length;
-      testsEl.textContent = `${passedTests}/${result.results.length}`;
-      logicEl.textContent = result.score >= 70 ? 'Passed' : result.score >= 40 ? 'Partial' : 'Failed';
+      const testCaseScore = result.test_case_score || result.score;
+      const logicScore = result.logic_score;
+      
+      testsEl.textContent = `${passedTests}/${result.results.length} (${testCaseScore}%)`;
+      
+      // Show logic score if available
+      if (logicScore !== null && logicScore !== undefined) {
+        logicEl.textContent = `${logicScore}/10 (Logic)`;
+      } else {
+        logicEl.textContent = 'AI Unavailable';
+      }
       
       // Build comprehensive feedback for all tests
-      let feedbackText = '';
+      let feedbackText = `FINAL SCORE: ${result.score}%\n`;
+      feedbackText += `├─ Test Cases: ${testCaseScore}% (${passedTests}/${result.results.length} passed)\n`;
+      if (logicScore !== null && logicScore !== undefined) {
+        feedbackText += `└─ Logic Score: ${logicScore}/10 (AI Evaluation)\n`;
+      }
+      feedbackText += '\n';
+      
       result.results.forEach((test, index) => {
         const testNum = index + 1;
         const status = test.is_correct ? '✓ Passed' : '✗ Failed';
@@ -401,12 +416,30 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    // Display results
+    // Display results with score breakdown
+    const testScore = result.test_case_score || result.score;
+    const logicScore = result.logic_score;
+    
     document.getElementById("score").innerText = result.score + '%';
-    document.getElementById("logic").innerText = result.is_correct ? "✅ Correct" : "❌ Wrong";
+    document.getElementById("tests").innerText = result.is_correct ? '1/1 (' + testScore + '%)' : '0/1 (' + testScore + '%)';
+    
+    if (logicScore !== null && logicScore !== undefined) {
+      document.getElementById("logic").innerText = `${logicScore}/10 (Logic)`;
+    } else {
+      document.getElementById("logic").innerText = result.is_correct ? "✅ Correct" : "❌ Wrong";
+    }
     
     // Build detailed feedback
     let feedbackText = 'Run Test Results:\n\n';
+    feedbackText += `SCORE: ${result.score}%\n`;
+    if (testScore !== result.score) {
+      feedbackText += `├─ Test: ${testScore}%\n`;
+      if (logicScore !== null && logicScore !== undefined) {
+        feedbackText += `└─ Logic: ${logicScore}/10\n`;
+      }
+    }
+    feedbackText += '\n';
+    
     if (result.error && result.error !== '') {
       feedbackText += `Error: ${result.error}\n`;
     } else {

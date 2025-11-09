@@ -103,9 +103,30 @@ The platform uses **Hugging Face Inference API** with **Llama 3.1-8B-Instruct** 
 - **Timeout**: 30 seconds per evaluation
 - **Graceful Degradation**: Falls back to test-only evaluation if AI unavailable
 
+### Partial Credit Scoring System (NEW)
+The platform awards partial marks based on both test results AND logic correctness:
+
+**Scoring Formula:**
+- **Combined Score** = 50% Test Cases + 50% Logic Score
+  - Test Case Score: 0-100% (percentage of passing tests)
+  - Logic Score: 0-10 from AI (converted to 0-100%)
+- **Fallback**: If AI unavailable, uses 100% test case score
+
+**Examples:**
+- Perfect code: 100% tests + 10/10 logic = **100% final**
+- Good logic, some bugs: 40% tests + 8/10 logic = **60% final** ✓ Partial credit!
+- All tests pass, poor logic: 100% tests + 4/10 logic = **70% final**
+- Wrong approach: 0% tests + 3/10 logic = **15% final**
+
+This ensures students get credit for:
+- Correct algorithms with minor bugs
+- Right approach but implementation errors
+- Demonstrating understanding even when incomplete
+
 ### Evaluation Output
 Each submission returns:
-- `score`: Test case pass percentage (0-100%)
+- `score`: Combined final score (0-100%) using formula above
+- `test_case_score`: Raw test pass percentage (0-100%)
 - `logic_score`: AI quality score (0-10) or None if AI unavailable
 - `hard_coded_detected`: Boolean flag for hard-coded solutions
 - `results`: Array with per-test-case feedback, AI analysis, and concerns

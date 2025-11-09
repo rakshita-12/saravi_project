@@ -125,6 +125,8 @@ def run_student_code(request):
         
         return JsonResponse({
             "score": report.get('score', 0),
+            "test_case_score": report.get('test_case_score', 0),
+            "logic_score": report.get('logic_score'),
             "is_correct": result.get('is_correct', False),
             "output": result.get('output', ''),
             "error": result.get('error', ''),

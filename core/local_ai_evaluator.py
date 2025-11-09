@@ -107,7 +107,7 @@ def analyze_code_logic(code, language, student_output, expected_output, test_inp
         for i, tc in enumerate(all_test_cases[:3], 1):  # Show up to 3 test cases
             test_context += f"Test {i}: Input='{tc['input']}' → Expected='{tc['expected']}'\n"
     
-    prompt = f"""You are a code evaluation expert. Analyze this {language} code submission.
+    prompt = f"""You are a code evaluation expert. Your job is to award PARTIAL CREDIT based on logic correctness, not just test case results.
 
 CODE:
 ```{language}
@@ -120,20 +120,30 @@ Expected Output: {expected_output}
 Student Output: {student_output}
 {test_context}
 
+SCORING PHILOSOPHY - AWARD PARTIAL CREDIT FOR:
+- **Correct approach** even with minor bugs (7-8/10)
+- **Right algorithm** but implementation errors (6-7/10)  
+- **Logical steps toward solution** even if incomplete (4-6/10)
+- **Understanding the problem** but wrong approach (2-4/10)
+- **No understanding** or completely wrong (0-2/10)
+
 EVALUATION CRITERIA:
-1. **Hard-coding Detection**: Does the code contain hard-coded values that match the expected output? Check for suspicious patterns like directly returning or printing the exact expected value.
-2. **Algorithm Logic**: Is the solution's logic sound and generalizable? Will it work for ANY valid input, not just these test cases?
-3. **Code Efficiency**: What's the time/space complexity? Is it optimal?
-4. **Code Quality**: Is it readable and follows best practices?
+1. **Algorithm Logic**: Does the student understand the problem? Is their approach sound? Give credit for correct logical steps even if execution fails.
+2. **Partial Correctness**: If the output is wrong, did they get close? Did they demonstrate understanding of key concepts?
+3. **Hard-coding Detection**: Only penalize if they're cheating with hard-coded values. Don't penalize for using constants appropriately.
+4. **Code Quality**: Readable code shows understanding - factor this into the score.
+
+IMPORTANT: Even if test cases fail, award 5-8/10 if the logic and approach are fundamentally correct.
 
 RESPONSE FORMAT:
-- Start with "LOGIC_SCORE: X/10" where X is 0-10
-- Then provide 2-3 sentences explaining:
-  * If hard-coded: clearly state "HARD-CODED SOLUTION DETECTED"
-  * Algorithm correctness and whether it generalizes beyond test cases
-  * Any efficiency or quality concerns
+Start with "LOGIC_SCORE: X/10" where X is 0-10, then explain:
+- What logical steps they got RIGHT (be generous)
+- Where they went wrong (if applicable)
+- If hard-coded: state "HARD-CODED SOLUTION DETECTED"
 
-Example: "LOGIC_SCORE: 9/10. The solution correctly implements a linear search algorithm that will work for any input. Time complexity is O(n) which is optimal for this problem."
+Example 1: "LOGIC_SCORE: 7/10. The student correctly identified this as a sorting problem and attempted bubble sort. Logic is sound but has an off-by-one error in the loop. The approach is right, just needs debugging."
+
+Example 2: "LOGIC_SCORE: 9/10. Perfect implementation of binary search with correct edge case handling. Code is clean and efficient."
 """
 
     try:
@@ -301,16 +311,24 @@ def evaluate_submission(code, language, test_cases):
             "status": ai_analysis.get("status", "unknown")
         })
 
-    # Calculate test case score
+    # Calculate test case score (0-100%)
     test_case_score = round((passed_tests / total_tests) * 100, 2)
     
-    # Calculate average logic score from AI
+    # Calculate average logic score from AI (0-10)
     avg_logic_score = None
     if all_logic_scores:
         avg_logic_score = round(sum(all_logic_scores) / len(all_logic_scores), 1)
     
+    # Calculate combined score for partial credit
+    # 50% weight on test cases, 50% weight on logic correctness
+    combined_score = test_case_score
+    if avg_logic_score is not None:
+        logic_percentage = avg_logic_score * 10
+        combined_score = round((test_case_score * 0.5) + (logic_percentage * 0.5), 2)
+    
     return {
-        "score": test_case_score,
+        "score": combined_score,
+        "test_case_score": test_case_score,
         "logic_score": avg_logic_score,
         "hard_coded_detected": has_hard_coded,
         "results": results
