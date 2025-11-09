@@ -1,4 +1,4 @@
-modules = ["python-3.12", "web", "nodejs-20"]
+modules = ["web", "nodejs-20", "python-3.11"]
 [agent]
 expertMode = true
 
@@ -34,14 +34,7 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-<<<<<<< HEAD
-localPort = 40307
-externalPort = 3001
-
-[[ports]]
-=======
->>>>>>> 2f73f89f0370ba1e0f1d81e06c5bc8d6bde3ba8d
-localPort = 43763
+localPort = 38977
 externalPort = 3000
 
 [deployment]
