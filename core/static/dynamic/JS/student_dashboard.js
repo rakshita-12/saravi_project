@@ -201,8 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
         
-        // Add AI feedback if available and not the default Ollama message
-        if (test.ai_feedback && !test.ai_feedback.includes('Ollama is not running')) {
+        // Add AI feedback if available and not an error message
+        if (test.ai_feedback && !isAIErrorMessage(test.ai_feedback)) {
           feedbackText += `Feedback: ${test.ai_feedback}\n`;
         }
         
@@ -424,8 +424,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       feedbackText += '\n';
       
-      // Add AI feedback if available and not the Ollama message
-      if (result.ai_feedback && !result.ai_feedback.includes('Ollama is not running')) {
+      // Add AI feedback if available and not an error message
+      if (result.ai_feedback && !isAIErrorMessage(result.ai_feedback)) {
         feedbackText += `AI Feedback: ${result.ai_feedback}`;
       }
     }
@@ -438,6 +438,28 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Failed to run code. Please try again.', 3000);
   }
   });
+
+  // Helper function to check if feedback is an AI error message
+  function isAIErrorMessage(feedback) {
+    if (!feedback) return true;
+    
+    const errorPatterns = [
+      'Ollama is not running',
+      'AI service error',
+      'AI service unavailable',
+      'AI model loading',
+      'AI analysis timed out',
+      'Network error during AI',
+      'Unexpected error during AI',
+      'client_error',
+      'server_error',
+      'model_loading',
+      'timeout',
+      'Enable AI for detailed logic analysis'
+    ];
+    
+    return errorPatterns.some(pattern => feedback.includes(pattern));
+  }
 
   // Helper function to read CSRF cookie
   function getCookie(name) {
