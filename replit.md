@@ -66,8 +66,51 @@ CodeQuestAI is a Django-based web application that provides an AI-powered coding
   - Added safe element existence checks to prevent TypeErrors
   - Implemented code editor clearing on logout and when leaving the page
   - Fixed JavaScript scoping issues by moving handlers inside DOMContentLoaded block
+- **Enhanced Hugging Face AI Integration** (November 9, 2025):
+  - Integrated Hugging Face Inference API using Llama 3.1-8B-Instruct model
+  - Added comprehensive logic-based code evaluation beyond simple test case matching
+  - Implemented hard-coded solution detection using AI analysis
+  - Added separate logic score (0-10) to evaluate algorithm quality and correctness
+  - Enhanced AI prompts to detect inefficient algorithms and provide actionable feedback
+  - Robust error handling with distinct status codes (success, model_loading, timeout, etc.)
+  - Added regex-based parsing for AI responses with float support and validation
+  - AI now receives all test cases for better context when detecting hard-coded solutions
+  - Evaluation results include: test_case_score, logic_score, hard_coded_detected flag, and detailed AI feedback
+  - Added `isAIErrorMessage()` filter to hide error messages from users
+  - Updated student dashboard to suppress AI service errors (410, timeout, model loading, etc.)
+- **Faculty Dashboard Enhancements** (November 9, 2025):
+  - Updated Review Submissions page with expandable test result details
+  - Added Logic Score column showing AI-assigned algorithm quality (0-10)
+  - Added hard-coded solution warning badges when AI detects suspicious patterns
+  - Implemented "View Details" button for each submission with clean test-by-test breakdown
+  - Updated Performance Reports page with similar improvements
+  - Filtered out AI error messages from faculty views (only shows meaningful feedback)
+  - Color-coded test results (green for pass, red for fail) with proper styling
+
+## AI Evaluation System
+The platform uses **Hugging Face Inference API** with **Llama 3.1-8B-Instruct** for intelligent code analysis:
+
+### Features
+- **Test Case Evaluation**: Traditional output matching (score based on % of passing tests)
+- **Logic Score**: AI-assigned score (0-10) evaluating algorithm correctness and quality
+- **Hard-coded Detection**: AI identifies solutions that only work for specific test inputs
+- **Efficiency Analysis**: Evaluates time/space complexity and suggests improvements
+- **Code Quality**: Checks readability, best practices, and code structure
+
+### Configuration
+- **Model**: meta-llama/Llama-3.1-8B-Instruct
+- **API Key**: Set via `HUGGINGFACE_API_KEY` environment variable (Replit Secrets)
+- **Timeout**: 30 seconds per evaluation
+- **Graceful Degradation**: Falls back to test-only evaluation if AI unavailable
+
+### Evaluation Output
+Each submission returns:
+- `score`: Test case pass percentage (0-100%)
+- `logic_score`: AI quality score (0-10) or None if AI unavailable
+- `hard_coded_detected`: Boolean flag for hard-coded solutions
+- `results`: Array with per-test-case feedback, AI analysis, and concerns
 
 ## Notes
-- The AI evaluator requires Ollama connection (currently unavailable message appears)
 - Database uses SQLite for development
 - Static files are collected in staticfiles/ directory
+- AI evaluation enhances traditional testing but doesn't replace it

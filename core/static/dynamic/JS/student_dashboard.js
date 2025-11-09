@@ -182,11 +182,34 @@ document.addEventListener('DOMContentLoaded', () => {
       testsEl.textContent = `${passedTests}/${result.results.length}`;
       logicEl.textContent = result.score >= 70 ? 'Passed' : result.score >= 40 ? 'Partial' : 'Failed';
       
-      // Show first test feedback
-      if (result.results.length > 0) {
-        const firstTest = result.results[0];
-        aiFeedback.textContent = `Test 1: ${firstTest.is_correct ? '✓ Passed' : '✗ Failed'}\n${firstTest.ai_feedback}`;
-      }
+      // Build comprehensive feedback for all tests
+      let feedbackText = '';
+      result.results.forEach((test, index) => {
+        const testNum = index + 1;
+        const status = test.is_correct ? '✓ Passed' : '✗ Failed';
+        
+        feedbackText += `Test ${testNum}: ${status}\n`;
+        
+        if (test.error && test.error !== '') {
+          feedbackText += `Error: ${test.error}\n`;
+        } else {
+          if (!test.is_correct) {
+            feedbackText += `Expected: ${test.expected}\n`;
+            feedbackText += `Got: ${test.output || '(no output)'}\n`;
+          } else {
+            feedbackText += `Output: ${test.output}\n`;
+          }
+        }
+        
+        // Add AI feedback if available and not an error message
+        if (test.ai_feedback && !isAIErrorMessage(test.ai_feedback)) {
+          feedbackText += `Feedback: ${test.ai_feedback}\n`;
+        }
+        
+        feedbackText += '\n';
+      });
+      
+      aiFeedback.textContent = feedbackText.trim() || 'No feedback available';
       
       showToast(`Submission complete! Score: ${result.score}%`, 3000);
       
@@ -378,9 +401,36 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
+    // Display results
     document.getElementById("score").innerText = result.score + '%';
     document.getElementById("logic").innerText = result.is_correct ? "✅ Correct" : "❌ Wrong";
-    document.getElementById("aiFeedback").innerText = result.ai_feedback || 'No feedback available';
+    
+    // Build detailed feedback
+    let feedbackText = 'Run Test Results:\n\n';
+    if (result.error && result.error !== '') {
+      feedbackText += `Error: ${result.error}\n`;
+    } else {
+      feedbackText += `Status: ${result.is_correct ? '✓ Passed' : '✗ Failed'}\n`;
+      feedbackText += `Output: ${result.output || '(no output)'}\n`;
+      
+      if (!result.is_correct) {
+        // Get the expected output from the page if available
+        const exampleOutputEl = document.getElementById("exampleOutput");
+        const expectedOutput = exampleOutputEl ? exampleOutputEl.textContent.trim() : '';
+        if (expectedOutput) {
+          feedbackText += `Expected: ${expectedOutput}\n`;
+        }
+      }
+      
+      feedbackText += '\n';
+      
+      // Add AI feedback if available and not an error message
+      if (result.ai_feedback && !isAIErrorMessage(result.ai_feedback)) {
+        feedbackText += `AI Feedback: ${result.ai_feedback}`;
+      }
+    }
+    
+    document.getElementById("aiFeedback").innerText = feedbackText.trim();
     
     showToast('Code executed!', 2000);
   } catch (error) {
@@ -388,6 +438,28 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Failed to run code. Please try again.', 3000);
   }
   });
+
+  // Helper function to check if feedback is an AI error message
+  function isAIErrorMessage(feedback) {
+    if (!feedback) return true;
+    
+    const errorPatterns = [
+      'Ollama is not running',
+      'AI service error',
+      'AI service unavailable',
+      'AI model loading',
+      'AI analysis timed out',
+      'Network error during AI',
+      'Unexpected error during AI',
+      'client_error',
+      'server_error',
+      'model_loading',
+      'timeout',
+      'Enable AI for detailed logic analysis'
+    ];
+    
+    return errorPatterns.some(pattern => feedback.includes(pattern));
+  }
 
   // Helper function to read CSRF cookie
   function getCookie(name) {

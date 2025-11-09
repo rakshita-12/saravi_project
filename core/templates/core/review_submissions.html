@@ -42,8 +42,10 @@
               <th>Question</th>
               <th>Language</th>
               <th>Score</th>
+              <th>Logic Score</th>
               <th>Status</th>
               <th>Submitted At</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -58,6 +60,13 @@
                   </span>
                 </td>
                 <td>
+                  {% if submission.result.logic_score is not None %}
+                    <span class="logic-score">{{ submission.result.logic_score }}/10</span>
+                  {% else %}
+                    <span style="color: #999;">N/A</span>
+                  {% endif %}
+                </td>
+                <td>
                   {% if submission.score == 100 %}
                     <span class="status-badge status-passed">✓ Passed</span>
                   {% elif submission.score >= 50 %}
@@ -65,12 +74,56 @@
                   {% else %}
                     <span class="status-badge status-failed">✗ Failed</span>
                   {% endif %}
+                  {% if submission.result.hard_coded_detected %}
+                    <span class="warning-badge" title="AI detected hard-coded solution">⚠ Hard-coded</span>
+                  {% endif %}
                 </td>
                 <td>{{ submission.submitted_at|date:"M d, Y H:i" }}</td>
+                <td>
+                  <button class="view-details-btn" onclick="toggleDetails({{ submission.id }})">View Details</button>
+                </td>
+              </tr>
+              <tr id="details-{{ submission.id }}" class="details-row" style="display: none;">
+                <td colspan="8">
+                  <div class="submission-details">
+                    <h4>Test Results</h4>
+                    <div class="test-results">
+                      {% for test_result in submission.result.results %}
+                        <div class="test-case {% if test_result.is_correct %}test-passed{% else %}test-failed{% endif %}">
+                          <div class="test-header">
+                            <span class="test-number">Test {{ forloop.counter }}</span>
+                            <span class="test-status">
+                              {% if test_result.is_correct %}
+                                ✓ Passed
+                              {% else %}
+                                ✗ Failed
+                              {% endif %}
+                            </span>
+                          </div>
+                          <div class="test-content">
+                            {% if test_result.error %}
+                              <p><strong>Error:</strong> {{ test_result.error }}</p>
+                            {% else %}
+                              {% if not test_result.is_correct %}
+                                <p><strong>Expected:</strong> <code>{{ test_result.expected }}</code></p>
+                                <p><strong>Got:</strong> <code>{{ test_result.output|default:"(no output)" }}</code></p>
+                              {% else %}
+                                <p><strong>Output:</strong> <code>{{ test_result.output }}</code></p>
+                              {% endif %}
+                              {% if test_result.ai_feedback and "AI service error" not in test_result.ai_feedback and "model loading" not in test_result.ai_feedback and "Enable AI" not in test_result.ai_feedback %}
+                                <p class="ai-feedback"><strong>AI Analysis:</strong> {{ test_result.ai_feedback }}</p>
+                              {% endif %}
+                            {% endif %}
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </td>
               </tr>
             {% empty %}
               <tr>
-                <td colspan="6" style="text-align: center; padding: 40px; color: #999; font-style: italic;">No submissions yet. Students haven't submitted any code.</td>
+                <td colspan="8" style="text-align: center; padding: 40px; color: #999; font-style: italic;">No submissions yet. Students haven't submitted any code.</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -80,5 +133,105 @@
   </div>
 
   <script src="{% static 'dynamic/JS/faculty_dashboard.js' %}"></script>
+  <script>
+    function toggleDetails(submissionId) {
+      const detailsRow = document.getElementById('details-' + submissionId);
+      if (detailsRow.style.display === 'none') {
+        detailsRow.style.display = 'table-row';
+      } else {
+        detailsRow.style.display = 'none';
+      }
+    }
+  </script>
+  <style>
+    .view-details-btn {
+      background: linear-gradient(90deg, #a855f7, #06b6d4);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: transform 0.2s;
+    }
+    .view-details-btn:hover {
+      transform: scale(1.05);
+    }
+    .details-row {
+      background: var(--bg-secondary, #f5f5f5);
+    }
+    .submission-details {
+      padding: 20px;
+    }
+    .test-results {
+      display: grid;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .test-case {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+      background: white;
+    }
+    .test-passed {
+      border-color: #4caf50;
+      background: #f1f8f4;
+    }
+    .test-failed {
+      border-color: #f44336;
+      background: #fef1f0;
+    }
+    .test-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .test-number {
+      font-size: 14px;
+      color: #555;
+    }
+    .test-status {
+      font-size: 14px;
+    }
+    .test-content p {
+      margin: 8px 0;
+      font-size: 14px;
+    }
+    .test-content code {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+    }
+    .ai-feedback {
+      margin-top: 12px;
+      padding: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .logic-score {
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .warning-badge {
+      background: #ff9800;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-left: 5px;
+      cursor: help;
+    }
+  </style>
 </body>
 </html>

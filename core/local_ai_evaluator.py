@@ -1,49 +1,65 @@
-import subprocess, tempfile, os, json, requests
+import subprocess, tempfile, os, json, requests, re
 
-# ---------- Detect Ollama Host ----------
-def get_ollama_url():
-    """Detect whether Ollama is running locally or inside Docker network."""
-    urls = ["http://ollama:11434/api/generate", "http://localhost:11434/api/generate"]
-    for url in urls:
-        try:
-            r = requests.get(url.replace("/api/generate", "/api/tags"), timeout=2)
-            if r.status_code == 200:
-                print(f" Ollama detected at: {url}")
-                return url
-        except requests.exceptions.RequestException:
-            continue
-    print("Could not connect to Ollama. AI feedback will be unavailable.")
-    return None
+# ---------- Hugging Face API Configuration ----------
+HUGGINGFACE_API_KEY = os.environ.get("HUGGINGFACE_API_KEY")
+# Using Llama 3.1 (released July 2024) - improved performance over 3.0
+HUGGINGFACE_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
+HUGGINGFACE_API_URL = f"https://api-inference.huggingface.co/models/{HUGGINGFACE_MODEL}"
 
-OLLAMA_API_URL = get_ollama_url()
+if HUGGINGFACE_API_KEY:
+    print("✓ Hugging Face AI enabled for intelligent code analysis")
+else:
+    print("⚠ Hugging Face API key not found. AI feedback will be limited.")
 
 # ---------- Run Code Function ----------
 def run_code(code, lang, test_input):
+    # Normalize language input (handle both "Python" and "python", "C++" and "cpp")
+    lang_normalized = lang.lower().replace("+", "p").replace(" ", "")
+    
+    # Validate that language is supported
+    supported_languages = ["python", "java", "cpp", "c", "c++"]
+    if lang_normalized not in supported_languages and lang_normalized.replace("+", "p") not in supported_languages:
+        return {
+            "output": "", 
+            "error": f"Unsupported language: {lang}. Supported languages are: Python, Java, C++, C"
+        }
+    
+    # Normalize c++ to cpp
+    if lang_normalized == "c++":
+        lang_normalized = "cpp"
+    
     with tempfile.TemporaryDirectory() as tempdir:
         ext_map = {"python": "py", "java": "java", "cpp": "cpp", "c": "c"}
-        ext = ext_map.get(lang.lower(), "txt")
+        ext = ext_map.get(lang_normalized, "txt")
         filepath = os.path.join(tempdir, f"code.{ext}")
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(code)
 
         compile_cmd = run_cmd = None
-        if lang.lower() == "python":
+        if lang_normalized == "python":
             run_cmd = ["python", filepath]
-        elif lang.lower() == "c":
+        elif lang_normalized == "c":
             exe_path = os.path.join(tempdir, "a.exe")
             compile_cmd = ["gcc", filepath, "-o", exe_path]
             run_cmd = [exe_path]
-        elif lang.lower() == "cpp":
+        elif lang_normalized == "cpp":
             exe_path = os.path.join(tempdir, "a.exe")
             compile_cmd = ["g++", filepath, "-o", exe_path]
             run_cmd = [exe_path]
-        elif lang.lower() == "java":
+        elif lang_normalized == "java":
             class_name = "Temp"
             filepath = os.path.join(tempdir, f"{class_name}.java")
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(code)
             compile_cmd = ["javac", filepath]
             run_cmd = ["java", "-cp", tempdir, class_name]
+        
+        # Additional safety check
+        if run_cmd is None:
+            return {
+                "output": "", 
+                "error": f"Internal error: Unable to configure runner for language {lang}"
+            }
 
         # Compile if needed
         if compile_cmd:
@@ -67,42 +83,171 @@ def run_code(code, lang, test_input):
 def evaluate_logic(student_output, expected_output):
     return student_output.strip() == expected_output.strip()
 
-# ---------- AI Feedback Using Ollama ----------
-def ai_feedback_ollama(code, student_output, expected_output):
-    if not OLLAMA_API_URL:
-        return "⚠️ Ollama is not running — no AI feedback available."
+# ---------- AI Code Logic Analyzer Using Hugging Face ----------
+def analyze_code_logic(code, language, student_output, expected_output, test_input, all_test_cases=None):
+    """
+    Intelligent code analysis that evaluates:
+    - Algorithm correctness and logic
+    - Code efficiency and complexity
+    - Hard-coded solutions detection
+    - Best practices and code quality
+    """
+    if not HUGGINGFACE_API_KEY:
+        return {
+            "feedback": "✓ Output-based evaluation complete. Enable AI for detailed logic analysis.",
+            "logic_score": None,
+            "concerns": [],
+            "status": "no_api_key"
+        }
+    
+    # Build comprehensive analysis prompt with multiple test cases context
+    test_context = ""
+    if all_test_cases and len(all_test_cases) > 1:
+        test_context = f"\nALL TEST CASES (for context):\n"
+        for i, tc in enumerate(all_test_cases[:3], 1):  # Show up to 3 test cases
+            test_context += f"Test {i}: Input='{tc['input']}' → Expected='{tc['expected']}'\n"
+    
+    prompt = f"""You are a code evaluation expert. Analyze this {language} code submission.
 
-    prompt = f"""
-You are a code evaluator. Analyze the student's code and output.
-
-Code:
+CODE:
+```{language}
 {code}
+```
 
-Student Output: {student_output}
+CURRENT TEST CASE:
+Input: {test_input}
 Expected Output: {expected_output}
+Student Output: {student_output}
+{test_context}
 
-Please respond with:
-- Logic score (1–5)
-- Short explanation of correctness
-- Suggested improvements if any.
+EVALUATION CRITERIA:
+1. **Hard-coding Detection**: Does the code contain hard-coded values that match the expected output? Check for suspicious patterns like directly returning or printing the exact expected value.
+2. **Algorithm Logic**: Is the solution's logic sound and generalizable? Will it work for ANY valid input, not just these test cases?
+3. **Code Efficiency**: What's the time/space complexity? Is it optimal?
+4. **Code Quality**: Is it readable and follows best practices?
+
+RESPONSE FORMAT:
+- Start with "LOGIC_SCORE: X/10" where X is 0-10
+- Then provide 2-3 sentences explaining:
+  * If hard-coded: clearly state "HARD-CODED SOLUTION DETECTED"
+  * Algorithm correctness and whether it generalizes beyond test cases
+  * Any efficiency or quality concerns
+
+Example: "LOGIC_SCORE: 9/10. The solution correctly implements a linear search algorithm that will work for any input. Time complexity is O(n) which is optimal for this problem."
 """
+
     try:
-        res = requests.post(OLLAMA_API_URL, json={"model": "llama3", "prompt": prompt}, timeout=40)
-        if res.status_code == 200:
-            data = res.text.splitlines()
-            response_text = ""
-            for line in data:
-                try:
-                    j = json.loads(line)
-                    if "response" in j:
-                        response_text += j["response"]
-                except:
-                    continue
-            return response_text.strip() or "(No response received)"
+        headers = {
+            "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "inputs": prompt,
+            "parameters": {
+                "max_new_tokens": 250,
+                "temperature": 0.3,
+                "top_p": 0.9,
+                "return_full_text": False
+            }
+        }
+        
+        response = requests.post(
+            HUGGINGFACE_API_URL,
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            if isinstance(result, list) and len(result) > 0:
+                feedback_text = result[0].get("generated_text", "").strip()
+                
+                # Parse logic score from response using robust regex
+                logic_score = None
+                concerns = []
+                
+                if feedback_text:
+                    # Extract logic score with regex (handles int, float, variations)
+                    score_match = re.search(r'LOGIC[_\s]*SCORE[:\s]*([0-9]+(?:\.[0-9]+)?)\s*/\s*10', feedback_text, re.IGNORECASE)
+                    if score_match:
+                        try:
+                            score_value = float(score_match.group(1))
+                            # Clamp between 0-10 and round to 1 decimal
+                            logic_score = max(0, min(10, round(score_value, 1)))
+                        except (ValueError, IndexError):
+                            logic_score = None
+                    
+                    # Detect concerns with normalized lowercase matching
+                    feedback_lower = feedback_text.lower()
+                    
+                    # Hard-coded detection (multiple keywords)
+                    hard_coded_keywords = ['hard-coded', 'hardcoded', 'hard coded', 'directly return', 'directly print']
+                    if any(keyword in feedback_lower for keyword in hard_coded_keywords):
+                        concerns.append("hard_coded")
+                    
+                    # Efficiency concerns
+                    efficiency_keywords = ['inefficient', 'can be improved', 'optimize', 'better complexity']
+                    if any(keyword in feedback_lower for keyword in efficiency_keywords):
+                        concerns.append("efficiency")
+                    
+                    return {
+                        "feedback": feedback_text,
+                        "logic_score": logic_score,
+                        "concerns": concerns,
+                        "status": "success"
+                    }
+                    
+            return {
+                "feedback": "AI analysis returned empty response.",
+                "logic_score": None,
+                "concerns": [],
+                "status": "empty_response"
+            }
+        elif response.status_code == 503:
+            return {
+                "feedback": "AI model loading. Try again in a moment.",
+                "logic_score": None,
+                "concerns": [],
+                "status": "model_loading"
+            }
+        elif response.status_code >= 400 and response.status_code < 500:
+            return {
+                "feedback": f"AI service error (client): {response.status_code}",
+                "logic_score": None,
+                "concerns": [],
+                "status": f"client_error_{response.status_code}"
+            }
         else:
-            return f"Ollama error: {res.text}"
+            return {
+                "feedback": f"AI service unavailable (status {response.status_code})",
+                "logic_score": None,
+                "concerns": [],
+                "status": f"server_error_{response.status_code}"
+            }
+            
+    except requests.exceptions.Timeout:
+        return {
+            "feedback": "AI analysis timed out after 30 seconds.",
+            "logic_score": None,
+            "concerns": [],
+            "status": "timeout"
+        }
+    except requests.exceptions.RequestException as e:
+        return {
+            "feedback": f"Network error during AI analysis: {type(e).__name__}",
+            "logic_score": None,
+            "concerns": [],
+            "status": "network_error"
+        }
     except Exception as e:
-        return f"Ollama connection error: {e}"
+        return {
+            "feedback": f"Unexpected error during AI analysis: {type(e).__name__}",
+            "logic_score": None,
+            "concerns": [],
+            "status": "unexpected_error"
+        }
 
 # ---------- Evaluate a Submission ----------
 def evaluate_submission(code, language, test_cases):
@@ -110,6 +255,10 @@ def evaluate_submission(code, language, test_cases):
     total_tests = len(test_cases)
     passed_tests = 0
 
+    # Collect all logic scores and concerns
+    all_logic_scores = []
+    has_hard_coded = False
+    
     for case in test_cases:
         input_data = case["input"]
         expected_output = case["expected"]
@@ -118,13 +267,27 @@ def evaluate_submission(code, language, test_cases):
         output = run_result["output"]
         error = run_result.get("error", "")
 
-        # Check logic
+        # Check logic (output matching)
         is_correct = evaluate_logic(output, expected_output)
         if is_correct:
             passed_tests += 1
 
-        # AI Feedback
-        feedback = ai_feedback_ollama(code, output, expected_output)
+        # Intelligent AI Code Analysis (evaluates logic, not just output)
+        ai_analysis = analyze_code_logic(
+            code=code,
+            language=language,
+            student_output=output,
+            expected_output=expected_output,
+            test_input=input_data,
+            all_test_cases=test_cases
+        )
+        
+        # Track logic scores and concerns (only if AI analysis succeeded)
+        if ai_analysis.get("status") == "success":
+            if ai_analysis.get("logic_score") is not None:
+                all_logic_scores.append(ai_analysis["logic_score"])
+            if "hard_coded" in ai_analysis.get("concerns", []):
+                has_hard_coded = True
 
         results.append({
             "input": input_data,
@@ -132,11 +295,26 @@ def evaluate_submission(code, language, test_cases):
             "output": output,
             "error": error,
             "is_correct": is_correct,
-            "ai_feedback": feedback
+            "ai_feedback": ai_analysis.get("feedback", ""),
+            "logic_score": ai_analysis.get("logic_score"),
+            "concerns": ai_analysis.get("concerns", []),
+            "status": ai_analysis.get("status", "unknown")
         })
 
-    score = round((passed_tests / total_tests) * 100, 2)
-    return {"score": score, "results": results}
+    # Calculate test case score
+    test_case_score = round((passed_tests / total_tests) * 100, 2)
+    
+    # Calculate average logic score from AI
+    avg_logic_score = None
+    if all_logic_scores:
+        avg_logic_score = round(sum(all_logic_scores) / len(all_logic_scores), 1)
+    
+    return {
+        "score": test_case_score,
+        "logic_score": avg_logic_score,
+        "hard_coded_detected": has_hard_coded,
+        "results": results
+    }
 
 # ---------- Example Execution ----------
 if __name__ == "__main__":
