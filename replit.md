@@ -110,6 +110,26 @@ Each submission returns:
 - `hard_coded_detected`: Boolean flag for hard-coded solutions
 - `results`: Array with per-test-case feedback, AI analysis, and concerns
 
+## Login Credentials (Test Accounts)
+
+### Main Test Accounts
+**Student Login:**
+- Username: `student`
+- Password: `student123`
+
+**Faculty Login:**
+- Username: `faculty`
+- Password: `faculty123`
+
+### Additional User Accounts
+The following accounts exist but may need password reset:
+- alice_wonder (student)
+- bob_builder (student)
+- charlie_brown (student)
+- diana_prince (student)
+- prof_smith (faculty)
+- prof_johnson (faculty)
+
 ## Notes
 - Database uses SQLite for development
 - Static files are collected in staticfiles/ directory
