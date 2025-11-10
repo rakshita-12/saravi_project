@@ -126,61 +126,64 @@
           </div>
         </section>
 
-        <!-- Submissions Table -->
-        <section class="submissions panel">
-          <h3>📊 Your Recent Submissions</h3>
-          <table class="styled-table">
-            <thead>
-              <tr>
-                <th>Question</th>
-                <th>Language</th>
-                <th>Score</th>
-                <th>Status</th>
-                <th>Submitted At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for sub in submissions %}
-                <tr>
-                  <td><strong>{{ sub.question.title }}</strong></td>
-                  <td><span class="lang-badge">{{ sub.language }}</span></td>
-                  <td>
-                    <span class="score-badge {% if sub.score >= 70 %}score-high{% elif sub.score >= 40 %}score-medium{% else %}score-low{% endif %}">
-                      {{ sub.score|floatformat:0 }}%
-                    </span>
-                  </td>
-                  <td>
-                    {% if sub.score == 100 %}
-                      <span class="status-badge status-passed">✓ Passed</span>
-                    {% elif sub.score >= 50 %}
-                      <span class="status-badge status-partial">~ Partial</span>
-                    {% else %}
-                      <span class="status-badge status-failed">✗ Failed</span>
-                    {% endif %}
-                  </td>
-                  <td>{{ sub.submitted_at|date:"M d, Y H:i" }}</td>
-                </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="5" class="empty-state">No submissions yet. Start solving challenges!</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </section>
-
-        <!-- AI Evaluation Column -->
-        <aside class="col eval-col">
-          <h4>AI Evaluation</h4>
-          <div class="card eval-card">
-            <p><strong>Score:</strong> <span id="score">—</span></p>
-            <p><strong>Tests:</strong> <span id="tests">—</span></p>
-            <p><strong>Logic:</strong> <span id="logic">—</span></p>
-            <div id="aiFeedback" class="ai-feedback">Run or Submit to get AI feedback.</div>
-            <div class="badges" id="badgeList"></div>
-          </div>
-        </aside>
       </div>
+
+      <!-- AI Evaluation Section - Full Width -->
+      <section class="ai-evaluation-section">
+        <div class="eval-header">
+          <h4>🤖 AI Evaluation & Feedback</h4>
+          <div class="eval-stats">
+            <span class="stat-item"><strong>Score:</strong> <span id="score">—</span></span>
+            <span class="stat-item"><strong>Tests:</strong> <span id="tests">—</span></span>
+            <span class="stat-item"><strong>Logic:</strong> <span id="logic">—</span></span>
+          </div>
+        </div>
+        <textarea id="aiFeedback" class="ai-feedback-textarea" readonly placeholder="Run or Submit your code to get AI-powered feedback and analysis..."></textarea>
+        <div class="badges" id="badgeList"></div>
+      </section>
+
+      <!-- Submissions Table -->
+      <section class="submissions panel">
+        <h3>📊 Your Recent Submissions</h3>
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th>Language</th>
+              <th>Score</th>
+              <th>Status</th>
+              <th>Submitted At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sub in submissions %}
+              <tr>
+                <td><strong>{{ sub.question.title }}</strong></td>
+                <td><span class="lang-badge">{{ sub.language }}</span></td>
+                <td>
+                  <span class="score-badge {% if sub.score >= 70 %}score-high{% elif sub.score >= 40 %}score-medium{% else %}score-low{% endif %}">
+                    {{ sub.score|floatformat:0 }}%
+                  </span>
+                </td>
+                <td>
+                  {% if sub.score == 100 %}
+                    <span class="status-badge status-passed">✓ Passed</span>
+                  {% elif sub.score >= 50 %}
+                    <span class="status-badge status-partial">~ Partial</span>
+                  {% else %}
+                    <span class="status-badge status-failed">✗ Failed</span>
+                  {% endif %}
+                </td>
+                <td>{{ sub.submitted_at|date:"M d, Y H:i" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="empty-state">No submissions yet. Start solving challenges!</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
     </section>
   </main>
 
