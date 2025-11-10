@@ -80,6 +80,7 @@ def validate_language_match(code, selected_language):
     """
     Validate if the submitted code matches the selected language.
     Returns (is_valid, error_message)
+    Only flags CLEAR mismatches (e.g., Java syntax in Python selection)
     """
     if not code or not code.strip():
         return True, None  # Empty code will fail anyway
@@ -92,12 +93,17 @@ def validate_language_match(code, selected_language):
     # Detect the actual language from code
     detected = detect_language_from_code(code)
     
-    # If we can't detect, allow it (benefit of doubt)
+    # If we can't detect with confidence, allow it (benefit of doubt)
     if detected is None:
         return True, None
     
     # Normalize detected language for comparison
     detected_normalized = detected.lower()
+    
+    # Special case: C and C++ can be similar, don't be too strict
+    # Allow C code to run as C++ (C is subset of C++)
+    if selected_normalized == "cpp" and detected_normalized == "c":
+        return True, None  # C code can compile as C++
     
     # Check if they match
     if detected_normalized != selected_normalized:
