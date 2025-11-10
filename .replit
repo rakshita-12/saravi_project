@@ -1,4 +1,4 @@
-modules = ["python-3.12", "web", "nodejs-20"]
+modules = ["python-3.12", "web", "nodejs-20", "java-graalvm22.3", "cpp-clang14"]
 [agent]
 expertMode = true
 

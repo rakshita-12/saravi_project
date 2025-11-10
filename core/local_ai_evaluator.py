@@ -173,9 +173,22 @@ def run_code(code, lang, test_input):
 
         # Compile if needed
         if compile_cmd:
-            compile_result = subprocess.run(compile_cmd, capture_output=True, text=True)
-            if compile_result.returncode != 0:
-                return {"output": compile_result.stderr.strip(), "error": "Compilation Error"}
+            try:
+                compile_result = subprocess.run(compile_cmd, capture_output=True, text=True)
+                if compile_result.returncode != 0:
+                    return {"output": compile_result.stderr.strip(), "error": "Compilation Error"}
+            except FileNotFoundError:
+                compiler_name = compile_cmd[0]
+                lang_name_map = {
+                    'javac': 'Java',
+                    'g++': 'C++',
+                    'gcc': 'C'
+                }
+                lang_name = lang_name_map.get(compiler_name, lang)
+                return {
+                    "output": "",
+                    "error": f"{lang_name} compiler not installed on this system. Please contact your administrator or use Python for now."
+                }
 
         # Run the code
         try:

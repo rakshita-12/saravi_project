@@ -13,3 +13,15 @@ staticfiles/
 *.swo
 *~
 .DS_Store
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# C/C++
+*.o
+*.exe
+*.out
+a.out
