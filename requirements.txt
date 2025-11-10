@@ -6,7 +6,3 @@ Django==5.2.8
 gunicorn
 huggingface_hub
 requests
-Django==5.2.8
-gunicorn
-huggingface_hub
-requests
