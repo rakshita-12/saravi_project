@@ -44,6 +44,15 @@ CodeQuestAI is a Django-based web application that provides an AI-powered coding
 - X_FRAME_OPTIONS set to ALLOWALL for iframe compatibility
 
 ## Recent Changes
+- **Student-Faculty Assignment During Registration** (November 10, 2025):
+  - Added faculty selection dropdown to student registration form
+  - Students must now select their instructor/faculty during registration
+  - Registration form dynamically loads all available faculty members
+  - Backend validates faculty selection and assigns students to faculty on creation
+  - Fixed existing orphan students (students without faculty) by assigning them to faculty
+  - Ensures all students are visible in their assigned faculty's dashboard
+  - Faculty dropdown shows faculty name and department for easy identification
+  - Prevents registration without faculty selection (required field)
 - **Group Management & Student Assignment** (November 10, 2025):
   - Implemented complete group management system for faculty
   - Added Group model with faculty ownership and unique constraint
