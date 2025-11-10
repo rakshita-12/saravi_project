@@ -176,6 +176,17 @@ document.addEventListener('DOMContentLoaded', () => {
       // Extract the actual result (nested under 'result' key)
       const result = data.result;
       
+      // Check for language mismatch - show error only, no score/feedback
+      if (result.results && result.results.length > 0 && result.results[0].status === 'language_mismatch') {
+        const errorMsg = result.results[0].error;
+        scoreEl.textContent = 'N/A';
+        testsEl.textContent = 'N/A';
+        logicEl.textContent = 'N/A';
+        aiFeedback.textContent = `⚠️ LANGUAGE MISMATCH\n\n${errorMsg}\n\nPlease select the correct language or rewrite your code in the selected language.`;
+        showToast('Language mismatch! No score given.', 3000);
+        return;
+      }
+      
       // Display results with breakdown
       scoreEl.textContent = `${result.score}%`;
       const passedTests = result.results.filter(r => r.is_correct).length;
@@ -416,6 +427,16 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
+    // Check for language mismatch - show error only, no score/feedback
+    if (result.error && result.error.includes('Language mismatch')) {
+      document.getElementById("score").innerText = '0%';
+      document.getElementById("tests").innerText = 'N/A';
+      document.getElementById("logic").innerText = 'N/A';
+      document.getElementById("aiFeedback").innerText = result.error;
+      showToast('Language mismatch detected!', 3000);
+      return;
+    }
+    
     // Display results with score breakdown
     const testScore = result.test_case_score || result.score;
     const logicScore = result.logic_score;
@@ -488,7 +509,8 @@ document.addEventListener('DOMContentLoaded', () => {
       'server_error',
       'model_loading',
       'timeout',
-      'Enable AI for detailed logic analysis'
+      'Enable AI for detailed logic analysis',
+      'Language mismatch'
     ];
     
     return errorPatterns.some(pattern => feedback.includes(pattern));

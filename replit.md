@@ -43,6 +43,14 @@ CodeQuestAI is a Django-based web application that provides an AI-powered coding
 - X_FRAME_OPTIONS set to ALLOWALL for iframe compatibility
 
 ## Recent Changes
+- **Language Mismatch Validation** (November 10, 2025):
+  - Implemented automatic language detection for submitted code
+  - When code language doesn't match the selected language, shows clear error message
+  - No score or feedback given for language mismatches
+  - Frontend displays "N/A" for all scores and shows warning message
+  - Prevents gaming the system by submitting code in wrong language
+  - Supports Python, Java, C++, and C with intelligent pattern matching
+  - Automatically filters out language mismatch errors from AI feedback display
 - Migrated project to Replit environment (November 8, 2025)
 - Configured Django settings for Replit proxy support
 - Set up workflow to run on port 5000
@@ -142,6 +150,17 @@ Students get credit for correct algorithmic approach even when code has syntax e
 - **Timeout**: 30 seconds for AI analysis
 - **Fallback**: Automatic switch to local heuristic if AI unavailable
 
+### Language Validation
+Before evaluating code, the system validates that the submitted code language matches the selected language:
+- **Automatic Detection**: Uses pattern matching to detect Python, Java, C++, and C code
+- **Language Mismatch Handling**: 
+  - Returns score of 0 with no AI feedback
+  - Displays clear error message explaining the mismatch
+  - Shows "N/A" for all score fields in the UI
+  - Prevents evaluation when code language doesn't match selection
+- **Smart Detection**: Uses specific syntax patterns (e.g., `System.out.println` for Java, `def` for Python)
+- **Special Cases**: C code is allowed when C++ is selected (C is subset of C++)
+
 ### Evaluation Output
 Each submission returns:
 - `score`: Combined final score (0-100%) using formula above
@@ -149,6 +168,7 @@ Each submission returns:
 - `logic_score`: AI quality score (0-10) or None if AI unavailable
 - `hard_coded_detected`: Boolean flag for hard-coded solutions
 - `results`: Array with per-test-case feedback, AI analysis, and concerns
+- `status`: "language_mismatch" when code language doesn't match selection
 
 ## Login Credentials (Test Accounts)
 
