@@ -176,7 +176,12 @@ def run_code(code, lang, test_input):
             try:
                 compile_result = subprocess.run(compile_cmd, capture_output=True, text=True)
                 if compile_result.returncode != 0:
-                    return {"output": compile_result.stderr.strip(), "error": "Compilation Error"}
+                    error_details = compile_result.stderr.strip()
+                    # Show the actual compiler error to help students debug
+                    return {
+                        "output": error_details,
+                        "error": f"Compilation Error:\n{error_details}"
+                    }
             except FileNotFoundError:
                 compiler_name = compile_cmd[0]
                 lang_name_map = {
