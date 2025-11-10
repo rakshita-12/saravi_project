@@ -4,6 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.db import transaction
 import csv
 import json
 
@@ -94,21 +97,30 @@ def student_register(request):
             return render(request, 'core/student_register.html')
         
         try:
-            user = User.objects.create_user(
-                username=username,
-                password=password,
-                email=email,
-                first_name=first_name,
-                last_name=last_name
-            )
-            
-            Student.objects.create(user=user)
+            temp_user = User(username=username, email=email, first_name=first_name, last_name=last_name)
+            validate_password(password, user=temp_user)
+        except ValidationError as e:
+            for error in e.messages:
+                messages.error(request, error)
+            return render(request, 'core/student_register.html')
+        
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=username,
+                    password=password,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name
+                )
+                
+                Student.objects.create(user=user)
             
             messages.success(request, "Registration successful! Please login.")
             return redirect('student_login')
         
         except Exception as e:
-            messages.error(request, f"Registration failed: {str(e)}")
+            messages.error(request, "Registration failed. Please try again.")
             return render(request, 'core/student_register.html')
     
     return render(request, 'core/student_register.html')
@@ -137,21 +149,30 @@ def faculty_register(request):
             return render(request, 'core/faculty_register.html')
         
         try:
-            user = User.objects.create_user(
-                username=username,
-                password=password,
-                email=email,
-                first_name=first_name,
-                last_name=last_name
-            )
-            
-            Faculty.objects.create(user=user, department=department)
+            temp_user = User(username=username, email=email, first_name=first_name, last_name=last_name)
+            validate_password(password, user=temp_user)
+        except ValidationError as e:
+            for error in e.messages:
+                messages.error(request, error)
+            return render(request, 'core/faculty_register.html')
+        
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=username,
+                    password=password,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name
+                )
+                
+                Faculty.objects.create(user=user, department=department)
             
             messages.success(request, "Registration successful! Please login.")
             return redirect('faculty_login')
         
         except Exception as e:
-            messages.error(request, f"Registration failed: {str(e)}")
+            messages.error(request, "Registration failed. Please try again.")
             return render(request, 'core/faculty_register.html')
     
     return render(request, 'core/faculty_register.html')
