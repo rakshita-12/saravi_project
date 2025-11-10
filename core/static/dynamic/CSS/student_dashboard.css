@@ -72,7 +72,7 @@ html,body{height:100%;margin:0;font-family:"Poppins",system-ui,-apple-system,"Se
 
 /* AI EVAL */
 .eval-card p{margin:.6rem 0;color:var(--muted)}
-.ai-feedback{margin-top:12px;background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;color:var(--muted);max-height:120px;overflow-x:auto;overflow-y:auto;white-space:pre-wrap;word-wrap:break-word}
+.ai-feedback{margin-top:12px;background:rgba(255,255,255,0.02);padding:16px;border-radius:8px;color:var(--muted);max-height:280px;min-height:150px;overflow-x:auto;overflow-y:auto;white-space:pre-wrap;word-wrap:break-word;font-size:0.9rem;line-height:1.5}
 
 /* FOCUS MODE UI */
 .focus-btn{background:linear-gradient(90deg,var(--accent1),var(--accent2));border:none;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer}
