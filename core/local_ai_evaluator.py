@@ -188,6 +188,12 @@ def run_code(code, lang, test_input):
                 if compile_result.returncode != 0:
                     error_details = compile_result.stderr.strip()
                     # Show the actual compiler error to help students debug
+                    # For "undefined reference to main" error, show helpful message
+                    if "undefined reference to `main'" in error_details:
+                        return {
+                            "output": error_details,
+                            "error": f"Compilation Error: Your {lang} code is missing a main() function.\n\nMake sure your code has:\nint main() {{\n    // your code here\n    return 0;\n}}\n\nCompiler output:\n{error_details}"
+                        }
                     return {
                         "output": error_details,
                         "error": f"Compilation Error:\n{error_details}"
