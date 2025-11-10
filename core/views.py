@@ -80,6 +80,8 @@ def logout_view(request):
 
 # ---------- Registration ----------
 def student_register(request):
+    faculties = Faculty.objects.select_related('user').all()
+    
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -87,14 +89,19 @@ def student_register(request):
         email = request.POST.get('email', '')
         first_name = request.POST.get('first_name', '')
         last_name = request.POST.get('last_name', '')
+        faculty_id = request.POST.get('faculty')
         
         if password != confirm_password:
             messages.error(request, "Passwords do not match")
-            return render(request, 'core/student_register.html')
+            return render(request, 'core/student_register.html', {'faculties': faculties})
         
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already exists")
-            return render(request, 'core/student_register.html')
+            return render(request, 'core/student_register.html', {'faculties': faculties})
+        
+        if not faculty_id:
+            messages.error(request, "Please select a faculty/instructor")
+            return render(request, 'core/student_register.html', {'faculties': faculties})
         
         try:
             temp_user = User(username=username, email=email, first_name=first_name, last_name=last_name)
@@ -102,7 +109,7 @@ def student_register(request):
         except ValidationError as e:
             for error in e.messages:
                 messages.error(request, error)
-            return render(request, 'core/student_register.html')
+            return render(request, 'core/student_register.html', {'faculties': faculties})
         
         try:
             with transaction.atomic():
@@ -114,16 +121,20 @@ def student_register(request):
                     last_name=last_name
                 )
                 
-                Student.objects.create(user=user)
+                faculty = Faculty.objects.get(id=faculty_id)
+                Student.objects.create(user=user, faculty=faculty)
             
             messages.success(request, "Registration successful! Please login.")
             return redirect('student_login')
         
+        except Faculty.DoesNotExist:
+            messages.error(request, "Invalid faculty selection")
+            return render(request, 'core/student_register.html', {'faculties': faculties})
         except Exception as e:
             messages.error(request, "Registration failed. Please try again.")
-            return render(request, 'core/student_register.html')
+            return render(request, 'core/student_register.html', {'faculties': faculties})
     
-    return render(request, 'core/student_register.html')
+    return render(request, 'core/student_register.html', {'faculties': faculties})
 
 
 def faculty_register(request):
