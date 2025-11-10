@@ -157,7 +157,17 @@ def run_code(code, lang, test_input):
             compile_cmd = ["g++", filepath, "-o", exe_path]
             run_cmd = [exe_path]
         elif lang_normalized == "java":
-            class_name = "Temp"
+            # Extract the public class name from Java code
+            # If no public class found, use "Main" as default
+            import re
+            class_match = re.search(r'public\s+class\s+(\w+)', code)
+            if class_match:
+                class_name = class_match.group(1)
+            else:
+                # No public class, look for any class or use default
+                class_match = re.search(r'class\s+(\w+)', code)
+                class_name = class_match.group(1) if class_match else "Main"
+            
             filepath = os.path.join(tempdir, f"{class_name}.java")
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(code)

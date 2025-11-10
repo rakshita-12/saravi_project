@@ -43,6 +43,19 @@ CodeQuestAI is a Django-based web application that provides an AI-powered coding
 - X_FRAME_OPTIONS set to ALLOWALL for iframe compatibility
 
 ## Recent Changes
+- **Java Class Name Fix** (November 10, 2025):
+  - Fixed Java compilation to automatically detect and use the correct class name
+  - System now extracts class name from code (e.g., `public class TwoSum` → saves as `TwoSum.java`)
+  - Resolves "class X is public, should be declared in a file named X.java" errors
+  - Works with both public and package-private classes
+- **Improved Error Messages** (November 10, 2025):
+  - Compilation errors now show detailed compiler output
+  - Students can see exact line numbers, error types, and helpful messages
+  - Better debugging experience for Java, C++, and C code
+- **Compiler Installation** (November 10, 2025):
+  - Installed Java compiler (GraalVM 22.3 with javac)
+  - Installed C++ compiler (Clang 14 with g++/clang++)
+  - All languages (Python, Java, C++, C) now fully supported
 - **Language Mismatch Validation** (November 10, 2025):
   - Implemented automatic language detection for submitted code
   - When code language doesn't match the selected language, shows clear error message
