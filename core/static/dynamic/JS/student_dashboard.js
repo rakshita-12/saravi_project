@@ -422,18 +422,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const result = await response.json();
     
-    if (result.error) {
-      showToast('Error: ' + result.error, 3000);
-      return;
-    }
-    
-    // Check for language mismatch - show error only, no score/feedback
+    // Check for language mismatch FIRST - show error only, no score/feedback
     if (result.error && result.error.includes('Language mismatch')) {
-      document.getElementById("score").innerText = '0%';
+      document.getElementById("score").innerText = 'N/A';
       document.getElementById("tests").innerText = 'N/A';
       document.getElementById("logic").innerText = 'N/A';
       document.getElementById("aiFeedback").innerText = result.error;
       showToast('Language mismatch detected!', 3000);
+      return;
+    }
+    
+    if (result.error) {
+      showToast('Error: ' + result.error, 3000);
       return;
     }
     
