@@ -54,7 +54,7 @@ html,body{height:100%;margin:0;font-family:"Poppins",system-ui,-apple-system,"Se
 .workspace-controls{display:flex;gap:10px}
 
 /* GRID: 3 columns */
-.workspace-body{display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:18px;align-items:start}
+.workspace-body{display:grid;grid-template-columns:0.9fr 1.5fr 1.3fr;gap:18px;align-items:start}
 .col{min-height:260px}
 .card{background:var(--panel);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(0,0,0,0.35)}
 .question-card h5{margin:0 0 8px 0;color:var(--text)}
