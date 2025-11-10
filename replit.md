@@ -31,11 +31,12 @@ CodeQuestAI is a Django-based web application that provides an AI-powered coding
 
 ## Models
 1. **Faculty** - Faculty user profiles with department info
-2. **Student** - Student profiles linked to faculty
-3. **Question** - Coding problems with difficulty levels and marks
-4. **TestCase** - Test cases for each question
-5. **Submission** - Student code submissions with results
-6. **Announcement** - Faculty announcements
+2. **Group** - Faculty-created groups for organizing students
+3. **Student** - Student profiles linked to faculty and optionally to a group
+4. **Question** - Coding problems with difficulty levels and marks
+5. **TestCase** - Test cases for each question
+6. **Submission** - Student code submissions with results
+7. **Announcement** - Faculty announcements
 
 ## Environment Configuration
 - ALLOWED_HOSTS set to accept all hosts (Replit proxy compatible)
@@ -43,6 +44,19 @@ CodeQuestAI is a Django-based web application that provides an AI-powered coding
 - X_FRAME_OPTIONS set to ALLOWALL for iframe compatibility
 
 ## Recent Changes
+- **Group Management & Student Assignment** (November 10, 2025):
+  - Implemented complete group management system for faculty
+  - Added Group model with faculty ownership and unique constraint
+  - Faculty can create groups from dashboard with real-time UI updates
+  - Added student assignment interface to assign students to groups
+  - Backend views with proper security: faculty can only manage their own groups/students
+  - Student-to-group assignment with dropdown selection and live refresh
+  - Groups display shows student count and member list
+  - Data migration properly preserved existing student group data
+  - Admin interface registered for Group model with student count display
+  - All endpoints secured with @login_required and faculty ownership validation
+  - CSRF protection implemented in all AJAX requests
+  - Input validation for group names (max 100 characters, required field)
 - **Java Class Name Fix** (November 10, 2025):
   - Fixed Java compilation to automatically detect and use the correct class name
   - System now extracts class name from code (e.g., `public class TwoSum` → saves as `TwoSum.java`)
