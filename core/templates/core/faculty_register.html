@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Faculty Login | CodeQuest AI</title>
+  <title>Faculty Registration | CodeQuest AI</title>
   <link rel="stylesheet" href="{% static 'dynamic/CSS/login.css' %}" />
 </head>
 <body>
@@ -12,7 +12,7 @@
 
   <div class="login-container">
     <div class="login-box">
-      <h1>Faculty Login</h1>
+      <h1>Faculty Registration</h1>
 
       {% if messages %}
         <ul class="messages">
@@ -22,15 +22,19 @@
         </ul>
       {% endif %}
 
-      <form method="POST" id="facultyLoginForm">
+      <form method="POST" action="{% url 'faculty_register' %}" id="facultyRegisterForm">
         {% csrf_token %}
-        <input type="text" name="username" placeholder="Faculty ID" required />
+        <input type="text" name="username" placeholder="Username" required />
+        <input type="email" name="email" placeholder="Email (optional)" />
+        <input type="text" name="first_name" placeholder="First Name (optional)" />
+        <input type="text" name="last_name" placeholder="Last Name (optional)" />
+        <input type="text" name="department" placeholder="Department" required />
         <input type="password" name="password" placeholder="Password" required />
-        <button type="submit" class="login-btn">Login</button>
+        <input type="password" name="confirm_password" placeholder="Confirm Password" required />
+        <button type="submit" class="login-btn">Register</button>
       </form>
 
-      <p class="note">Don't have an account? <a href="{% url 'faculty_register' %}" style="color: var(--accent1);">Register here</a></p>
-      <p class="note">🔒 Secure login</p>
+      <p class="note">Already have an account? <a href="{% url 'faculty_login' %}" style="color: var(--accent1);">Login here</a></p>
       <a href="{% url 'home' %}" class="back-link">⬅ Back to Home</a>
     </div>
   </div>

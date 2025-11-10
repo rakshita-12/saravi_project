@@ -75,6 +75,88 @@ def logout_view(request):
     return render(request, 'core/logout.html')  # Show confirmation page
 
 
+# ---------- Registration ----------
+def student_register(request):
+    if request.method == "POST":
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        email = request.POST.get('email', '')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match")
+            return render(request, 'core/student_register.html')
+        
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists")
+            return render(request, 'core/student_register.html')
+        
+        try:
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=email,
+                first_name=first_name,
+                last_name=last_name
+            )
+            
+            Student.objects.create(user=user)
+            
+            messages.success(request, "Registration successful! Please login.")
+            return redirect('student_login')
+        
+        except Exception as e:
+            messages.error(request, f"Registration failed: {str(e)}")
+            return render(request, 'core/student_register.html')
+    
+    return render(request, 'core/student_register.html')
+
+
+def faculty_register(request):
+    if request.method == "POST":
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        email = request.POST.get('email', '')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        department = request.POST.get('department', '')
+        
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match")
+            return render(request, 'core/faculty_register.html')
+        
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists")
+            return render(request, 'core/faculty_register.html')
+        
+        if not department:
+            messages.error(request, "Department is required")
+            return render(request, 'core/faculty_register.html')
+        
+        try:
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=email,
+                first_name=first_name,
+                last_name=last_name
+            )
+            
+            Faculty.objects.create(user=user, department=department)
+            
+            messages.success(request, "Registration successful! Please login.")
+            return redirect('faculty_login')
+        
+        except Exception as e:
+            messages.error(request, f"Registration failed: {str(e)}")
+            return render(request, 'core/faculty_register.html')
+    
+    return render(request, 'core/faculty_register.html')
+
+
 # ---------- Student Dashboard ----------
 @login_required
 def student_dashboard(request):

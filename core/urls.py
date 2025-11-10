@@ -8,8 +8,10 @@ urlpatterns = [
     # ---------- Authentication ----------
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
-    #path('student/login/', views.student_login, name='student_login'),
-    #path('faculty/login/', views.faculty_login, name='faculty_login'), 
+
+    # ---------- Registration ----------
+    path('student/register/', views.student_register, name='student_register'),
+    path('faculty/register/', views.faculty_register, name='faculty_register'),
 
     # ---------- Student Routes ----------
     path('student/login/', views.student_login, name='student_login'),
