@@ -27,6 +27,8 @@ urlpatterns = [
     path('faculty/announcements/', views.announcements, name='faculty_announcements'),
     path('faculty/groups/create/', views.create_group, name='create_group'),
     path('faculty/groups/', views.get_groups, name='get_groups'),
+    path('faculty/students/', views.get_students, name='get_students'),
+    path('faculty/students/assign/', views.assign_student_to_group, name='assign_student'),
 
     # ---------- Shared ----------
     path('announcements/', views.announcements, name='announcements'),

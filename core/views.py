@@ -305,6 +305,9 @@ def create_group(request):
             if not group_name:
                 return JsonResponse({"error": "Group name is required"}, status=400)
             
+            if len(group_name) > 100:
+                return JsonResponse({"error": "Group name is too long (max 100 characters)"}, status=400)
+            
             group, created = Group.objects.get_or_create(
                 name=group_name,
                 faculty=faculty
@@ -325,6 +328,8 @@ def create_group(request):
         
         except Faculty.DoesNotExist:
             return JsonResponse({"error": "Faculty profile not found"}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
     
@@ -348,6 +353,73 @@ def get_groups(request):
             })
         
         return JsonResponse({"groups": groups_data})
+    
+    except Faculty.DoesNotExist:
+        return JsonResponse({"error": "Faculty profile not found"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@login_required
+def assign_student_to_group(request):
+    if request.method == "POST":
+        try:
+            faculty = Faculty.objects.get(user=request.user)
+            data = json.loads(request.body)
+            student_id = data.get("student_id")
+            group_id = data.get("group_id")
+            
+            if not student_id:
+                return JsonResponse({"error": "Student ID is required"}, status=400)
+            
+            student = get_object_or_404(Student, id=student_id)
+            
+            if student.faculty != faculty:
+                return JsonResponse({"error": "You can only assign your own students"}, status=403)
+            
+            if group_id:
+                group = get_object_or_404(Group, id=group_id)
+                
+                if group.faculty != faculty:
+                    return JsonResponse({"error": "You can only assign to your own groups"}, status=403)
+                
+                student.group = group
+                message = f"Student '{student.user.username}' assigned to group '{group.name}'"
+            else:
+                student.group = None
+                message = f"Student '{student.user.username}' removed from group"
+            
+            student.save()
+            
+            return JsonResponse({
+                "success": True,
+                "message": message
+            })
+        
+        except Faculty.DoesNotExist:
+            return JsonResponse({"error": "Faculty profile not found"}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=400)
+
+
+@login_required
+def get_students(request):
+    try:
+        faculty = Faculty.objects.get(user=request.user)
+        students = Student.objects.filter(faculty=faculty).select_related('user', 'group')
+        
+        students_data = [{
+            "id": s.id,
+            "username": s.user.username,
+            "group_id": s.group.id if s.group else None,
+            "group_name": s.group.name if s.group else None
+        } for s in students]
+        
+        return JsonResponse({"students": students_data})
     
     except Faculty.DoesNotExist:
         return JsonResponse({"error": "Faculty profile not found"}, status=400)
