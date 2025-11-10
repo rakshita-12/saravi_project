@@ -11,6 +11,110 @@ if HUGGINGFACE_API_KEY:
 else:
     print("⚠ Hugging Face API key not found. AI feedback will be limited.")
 
+# ---------- Language Detection Function ----------
+def detect_language_from_code(code):
+    """
+    Detect the likely programming language from code patterns.
+    Returns the detected language or None if uncertain.
+    """
+    if not code or not code.strip():
+        return None
+    
+    code_clean = code.strip()
+    
+    # Java detection - very specific patterns
+    java_patterns = [
+        r'\bpublic\s+class\s+\w+',
+        r'\bpublic\s+static\s+void\s+main',
+        r'\bSystem\.out\.print',
+        r'\bprivate\s+\w+\s+\w+\s*\(',
+        r'\bimport\s+java\.',
+    ]
+    if any(re.search(pattern, code_clean) for pattern in java_patterns):
+        return 'java'
+    
+    # C++ detection - specific to C++
+    cpp_patterns = [
+        r'#include\s*<iostream>',
+        r'\bstd::cout\b',
+        r'\bstd::cin\b',
+        r'\bstd::string\b',
+        r'\busing\s+namespace\s+std',
+    ]
+    if any(re.search(pattern, code_clean) for pattern in cpp_patterns):
+        return 'cpp'
+    
+    # C detection (must check after C++ since C++ includes C headers)
+    c_patterns = [
+        r'#include\s*<stdio\.h>',
+        r'\bprintf\s*\(',
+        r'\bscanf\s*\(',
+        r'#include\s*<stdlib\.h>',
+        r'#include\s*<string\.h>',
+    ]
+    if any(re.search(pattern, code_clean) for pattern in c_patterns):
+        return 'c'
+    
+    # Python detection
+    python_patterns = [
+        r'\bdef\s+\w+\s*\(',
+        r'\bimport\s+\w+',
+        r'\bfrom\s+\w+\s+import',
+        r'\bprint\s*\(',
+        r'\bif\s+__name__\s*==\s*["\']__main__["\']',
+        r':\s*$',  # Colon at end of line (common in Python)
+    ]
+    python_score = sum(1 for pattern in python_patterns if re.search(pattern, code_clean, re.MULTILINE))
+    
+    # If multiple Python patterns match, likely Python
+    if python_score >= 2:
+        return 'python'
+    
+    # Check for single Python-specific pattern
+    if re.search(r'\bdef\s+\w+\s*\(', code_clean) or re.search(r'\bprint\s*\(', code_clean):
+        return 'python'
+    
+    return None
+
+def validate_language_match(code, selected_language):
+    """
+    Validate if the submitted code matches the selected language.
+    Returns (is_valid, error_message)
+    """
+    if not code or not code.strip():
+        return True, None  # Empty code will fail anyway
+    
+    # Normalize selected language
+    selected_normalized = selected_language.lower().replace("+", "p").replace(" ", "")
+    if selected_normalized == "c++":
+        selected_normalized = "cpp"
+    
+    # Detect the actual language from code
+    detected = detect_language_from_code(code)
+    
+    # If we can't detect, allow it (benefit of doubt)
+    if detected is None:
+        return True, None
+    
+    # Normalize detected language for comparison
+    detected_normalized = detected.lower()
+    
+    # Check if they match
+    if detected_normalized != selected_normalized:
+        language_names = {
+            'python': 'Python',
+            'java': 'Java',
+            'cpp': 'C++',
+            'c': 'C'
+        }
+        selected_name = language_names.get(selected_normalized, selected_language)
+        detected_name = language_names.get(detected_normalized, detected)
+        
+        error_msg = f"Language mismatch: You selected {selected_name} but submitted {detected_name} code. Please select the correct language or rewrite your code in {selected_name}."
+        return False, error_msg
+    
+    return True, None
+
 # ---------- Run Code Function ----------
 def run_code(code, lang, test_input):
     # Normalize language input (handle both "Python" and "python", "C++" and "cpp")
@@ -288,6 +392,31 @@ def evaluate_submission(code, language, test_cases):
     results = []
     total_tests = len(test_cases)
     passed_tests = 0
+    
+    # STEP 0: Validate language match FIRST
+    is_valid, error_message = validate_language_match(code, language)
+    if not is_valid:
+        # Language mismatch - return error with NO score
+        for case in test_cases:
+            results.append({
+                "input": case["input"],
+                "expected": case["expected"],
+                "output": "",
+                "error": error_message,
+                "is_correct": False,
+                "ai_feedback": error_message if not results else "",
+                "logic_score": None,
+                "concerns": ["language_mismatch"],
+                "status": "language_mismatch"
+            })
+        
+        return {
+            "score": 0,
+            "test_case_score": 0,
+            "logic_score": None,
+            "hard_coded_detected": False,
+            "results": results
+        }
     
     # STEP 1: Analyze code approach UPFRONT (before running anything)
     # This awards partial credit for correct algorithm even with syntax errors!
