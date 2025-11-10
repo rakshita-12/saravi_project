@@ -41,10 +41,6 @@ externalPort = 3000
 localPort = 40633
 externalPort = 3002
 
-[[ports]]
-localPort = 40993
-externalPort = 3001
-
 [deployment]
 deploymentTarget = "autoscale"
 run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "saravi_project.wsgi:application"]
