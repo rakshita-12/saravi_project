@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 import csv
 import json
 
-from .models import Student, Faculty, Question, Submission, Announcement
+from .models import Student, Faculty, Question, Submission, Announcement, Group
 from .local_ai_evaluator import evaluate_submission  # Your AI evaluator script
 
 
@@ -292,3 +292,64 @@ def upload_questions(request):
             messages.error(request, "All fields are required.")
 
     return render(request, 'core/upload_questions.html')
+
+
+@login_required
+def create_group(request):
+    if request.method == "POST":
+        try:
+            faculty = Faculty.objects.get(user=request.user)
+            data = json.loads(request.body)
+            group_name = data.get("name", "").strip()
+            
+            if not group_name:
+                return JsonResponse({"error": "Group name is required"}, status=400)
+            
+            group, created = Group.objects.get_or_create(
+                name=group_name,
+                faculty=faculty
+            )
+            
+            if created:
+                return JsonResponse({
+                    "success": True,
+                    "message": f"Group '{group_name}' created successfully",
+                    "group": {
+                        "id": group.id,
+                        "name": group.name,
+                        "student_count": group.students.count()
+                    }
+                })
+            else:
+                return JsonResponse({"error": "Group already exists"}, status=400)
+        
+        except Faculty.DoesNotExist:
+            return JsonResponse({"error": "Faculty profile not found"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=400)
+
+
+@login_required
+def get_groups(request):
+    try:
+        faculty = Faculty.objects.get(user=request.user)
+        groups = Group.objects.filter(faculty=faculty).order_by('-created_at')
+        
+        groups_data = []
+        for group in groups:
+            students = group.students.all()
+            groups_data.append({
+                "id": group.id,
+                "name": group.name,
+                "student_count": students.count(),
+                "students": [{"id": s.id, "username": s.user.username} for s in students]
+            })
+        
+        return JsonResponse({"groups": groups_data})
+    
+    except Faculty.DoesNotExist:
+        return JsonResponse({"error": "Faculty profile not found"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
